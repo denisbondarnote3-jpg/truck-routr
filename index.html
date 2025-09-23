@@ -5,54 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Маршрут на день</title>
   <style>
-    body {
-      font-family: "Segoe UI", Roboto, Arial, sans-serif;
-      background: linear-gradient(135deg, #0f1115, #1b1e29);
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 { margin: 20px 0; font-size: 28px; color: #4da3ff; text-shadow: 0 0 8px #4da3ff55; }
-    .lang-switch { margin-bottom: 20px; }
-    input {
-      padding: 10px;
-      margin: 5px;
-      width: 45%; /* половина ширини */
-      border-radius: 10px;
-      border: 1px solid #333;
-      background: #1c1f2b;
-      color: #fff;
-      font-size: 15px;
-      transition: 0.2s;
-    }
-    input:focus { outline: none; border-color: #4da3ff; box-shadow: 0 0 6px #4da3ff88; }
-    button {
-      padding: 10px 16px;
-      margin: 8px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 15px;
-      transition: 0.2s;
-    }
-    button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px #00000066; }
-    .primary { background: #4da3ff; color: #000; }
-    .ok { background: #27c26a; color: #000; }
-    .danger { background: #ff5c5c; color: #000; }
-    .list { margin: 20px auto; max-width: 500px; text-align: left; }
-    .stop {
-      padding: 12px;
-      background: #22263a;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #333;
-      font-size: 16px;
-      transition: 0.2s;
-    }
-    .stop:hover { background: #2c3147; border-color: #4da3ff; }
-    h2#status { margin-top: 20px; font-size: 20px; color: #ffd166; text-shadow: 0 0 6px #000; }
+    body { font-family: "Segoe UI", Roboto, Arial, sans-serif;
+           background: linear-gradient(135deg,#0f1115,#1b1e29); color:#fff; margin:0; padding:20px; text-align:center; }
+    h1 { margin:20px 0; font-size:28px; color:#4da3ff; text-shadow:0 0 8px #4da3ff55; }
+    .lang-switch { margin-bottom:18px; }
+    input { padding:10px; margin:5px; width:45%; max-width:420px; border-radius:10px; border:1px solid #333;
+            background:#1c1f2b; color:#fff; font-size:15px; transition:.2s; }
+    input:focus { outline:none; border-color:#4da3ff; box-shadow:0 0 6px #4da3ff88; }
+    button { padding:10px 16px; margin:8px; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:15px; transition:.2s; }
+    button:hover { transform:translateY(-2px); box-shadow:0 4px 12px #0006; }
+    .primary{ background:#4da3ff; color:#00121f; }
+    .ok{ background:#27c26a; color:#00160a; }
+    .danger{ background:#ff5c5c; color:#250000; }
+    .list{ margin:20px auto; max-width:520px; text-align:left; }
+    .stop{ padding:12px; background:#22263a; border-radius:10px; margin-bottom:10px; border:1px solid #333; font-size:16px; }
+    .stop:hover{ background:#2c3147; border-color:#4da3ff; }
+    h2#status{ margin-top:16px; font-size:20px; color:#ffd166; text-shadow:0 0 6px #000; min-height:1.4em;}
   </style>
 </head>
 <body>
@@ -64,7 +32,7 @@
   <h1 id="title">Маршрут на день 🚛</h1>
 
   <input id="label" placeholder="Назва (наприклад: Магазин Fiat)">
-  <input id="addr" placeholder="Адреса (наприклад: Parma, Via Roma)">
+  <input id="addr"  placeholder="Адреса (наприклад: Parma, Via Roma)">
   <br>
   <button class="primary" id="addBtn">Додати</button>
 
@@ -77,98 +45,120 @@
   <h2 id="status"></h2>
 
 <script>
-  let stops = [];
-  let idx = -1;
-  let lang = "uk";
-
+  // ===== i18n =====
   const texts = {
     uk: {
-      title: "Маршрут на день 🚛",
-      add: "Додати",
-      start: "Старт",
-      next: "Завершити → Наступна",
-      reset: "Новий маршрут",
-      noStops: "Немає зупинок",
-      finished: "Маршрут завершено ✅",
-      stop: "Виконується зупинка №"
+      title:"Маршрут на день 🚛",
+      phLabel:"Назва (наприклад: Магазин Fiat)",
+      phAddr:"Адреса (наприклад: Parma, Via Roma)",
+      add:"Додати", start:"Старт", next:"Завершити → Наступна", reset:"Новий маршрут",
+      noStops:"Немає зупинок", finished:"Маршрут завершено ✅",
+      stop:"Виконується зупинка №", confirmClear:"Очистити маршрут?"
     },
     it: {
-      title: "Percorso della giornata 🚛",
-      add: "Aggiungi",
-      start: "Avvia",
-      next: "Fine → Successiva",
-      reset: "Nuovo percorso",
-      noStops: "Nessuna fermata",
-      finished: "Percorso completato ✅",
-      stop: "Tappa in corso №"
+      title:"Percorso della giornata 🚛",
+      phLabel:"Nome (es.: Negozio Fiat)",
+      phAddr:"Indirizzo (es.: Parma, Via Roma)",
+      add:"Aggiungi", start:"Avvia", next:"Fine → Successiva", reset:"Nuovo percorso",
+      noStops:"Nessuna fermata", finished:"Percorso completato ✅",
+      stop:"Tappa in corso №", confirmClear:"Pulire il percorso?"
     }
   };
 
-  function setLang(l) {
-    lang = l;
-    document.getElementById("title").textContent = texts[lang].title;
-    document.getElementById("addBtn").textContent = texts[lang].add;
-    document.getElementById("startBtn").textContent = texts[lang].start;
-    document.getElementById("nextBtn").textContent = texts[lang].next;
-    document.getElementById("resetBtn").textContent = texts[lang].reset;
-    render();
+  // ===== state + storage =====
+  const STORAGE_KEY = 'truck_route_minimal_v1';
+  let state = { stops: [], idx: -1, lang: 'uk' };
+
+  const $ = id => document.getElementById(id);
+
+  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function load(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    try{
+      const s = JSON.parse(raw);
+      if(s && Array.isArray(s.stops)) state = Object.assign({stops:[], idx:-1, lang:'uk'}, s);
+    }catch{}
   }
 
-  document.getElementById("addBtn").onclick = () => {
-    const label = document.getElementById("label").value.trim();
-    const addr = document.getElementById("addr").value.trim();
-    if (!addr) return alert("Введи адресу");
-    stops.push({label, addr});
-    document.getElementById("label").value = "";
-    document.getElementById("addr").value = "";
-    render();
-  };
-
-  document.getElementById("startBtn").onclick = () => {
-    if (stops.length === 0) return alert(texts[lang].noStops);
-    idx = 0;
-    openMaps(stops[idx].addr);
-    document.getElementById("status").textContent = texts[lang].stop + (idx+1);
-    document.getElementById("nextBtn").disabled = false;
-  };
-
-  document.getElementById("nextBtn").onclick = () => {
-    idx++;
-    if (idx >= stops.length) {
-      document.getElementById("status").textContent = texts[lang].finished;
-      document.getElementById("nextBtn").disabled = true;
-      return;
+  // ===== UI render =====
+  function setLang(l){
+    state.lang = l; save();
+    const t = texts[state.lang];
+    $('title').textContent = t.title;
+    $('label').placeholder = t.phLabel;
+    $('addr').placeholder  = t.phAddr;
+    $('addBtn').textContent = t.add;
+    $('startBtn').textContent = t.start;
+    $('nextBtn').textContent  = t.next;
+    $('resetBtn').textContent = t.reset;
+    renderList();
+    if(state.idx >= 0 && state.idx < state.stops.length){
+      $('status').textContent = t.stop + (state.idx+1);
+    } else if(state.idx === -1 && state.stops.length===0){
+      $('status').textContent = '';
     }
-    openMaps(stops[idx].addr);
-    document.getElementById("status").textContent = texts[lang].stop + (idx+1);
-  };
-
-  document.getElementById("resetBtn").onclick = () => {
-    if (!confirm("Очистити?")) return;
-    stops = [];
-    idx = -1;
-    document.getElementById("status").textContent = "";
-    render();
-    document.getElementById("nextBtn").disabled = true;
-  };
-
-  function openMaps(addr) {
-    const url = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(addr);
-    window.open(url, "_blank");
   }
 
-  function render() {
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-    stops.forEach((s, i) => {
-      const div = document.createElement("div");
-      div.className = "stop";
-      div.textContent = (i+1) + ". " + (s.label ? s.label + " — " : "") + s.addr;
+  function renderList(){
+    const list = $('list'); list.innerHTML = '';
+    state.stops.forEach((s,i)=>{
+      const div = document.createElement('div');
+      div.className = 'stop';
+      div.textContent = (i+1) + '. ' + (s.label ? s.label + ' — ' : '') + s.addr;
       list.appendChild(div);
     });
+    // кнопки
+    $('nextBtn').disabled = !(state.idx >= 0 && state.idx < state.stops.length);
   }
 
-  setLang("uk");
+  // ===== actions =====
+  $('addBtn').onclick = () => {
+    const label = $('label').value.trim();
+    const addr  = $('addr').value.trim();
+    if(!addr){ alert(state.lang==='uk'?'Введи адресу':'Inserisci l’indirizzo'); return; }
+    state.stops.push({label, addr});
+    $('label').value = ''; $('addr').value = '';
+    save(); renderList();
+  };
+
+  $('startBtn').onclick = () => {
+    if(state.stops.length===0){ alert(texts[state.lang].noStops); return; }
+    state.idx = 0; save();
+    openMaps(state.stops[state.idx].addr);
+    $('status').textContent = texts[state.lang].stop + (state.idx+1);
+    $('nextBtn').disabled = false;
+  };
+
+  $('nextBtn').onclick = () => {
+    state.idx++;
+    if(state.idx >= state.stops.length){
+      $('status').textContent = texts[state.lang].finished;
+      $('nextBtn').disabled = true;
+      state.idx = -1; // маршрут завершено
+      save();
+      return;
+    }
+    save();
+    openMaps(state.stops[state.idx].addr);
+    $('status').textContent = texts[state.lang].stop + (state.idx+1);
+  };
+
+  $('resetBtn').onclick = () => {
+    if(!confirm(texts[state.lang].confirmClear)) return;
+    state = {stops:[], idx:-1, lang: state.lang};
+    save(); $('status').textContent=''; renderList();
+  };
+
+  function openMaps(addr){
+    const url = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(addr);
+    window.open(url, '_blank');
+  }
+
+  // init
+  load();
+  setLang(state.lang || 'uk');
+  renderList();
 </script>
 </body>
 </html>

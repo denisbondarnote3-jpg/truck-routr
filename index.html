@@ -1,28 +1,63 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Маршрут на день + км</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Маршрут на день</title>
+
+<!-- Leaflet (карта) + Routing Machine (маршрут) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+
 <style>
-  body{font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(135deg,#0f1115,#1b1e29);color:#fff;margin:0;padding:20px;text-align:center}
-  h1{margin:10px 0 6px;font-size:28px;color:#4da3ff;text-shadow:0 0 8px #4da3ff55}
-  .lang-switch{margin:8px 0 18px}
-  .lang-switch button{padding:8px 12px;margin:0 4px;border:none;border-radius:10px;background:#4da3ff;color:#00121f;font-weight:700;cursor:pointer}
-  input{padding:10px;margin:5px;width:45%;max-width:420px;border-radius:10px;border:1px solid #333;background:#1c1f2b;color:#fff;font-size:15px}
-  button{padding:10px 16px;margin:8px;border:none;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;transition:.2s}
-  button:hover{transform:translateY(-2px);box-shadow:0 4px 12px #0006}
-  .primary{background:#4da3ff;color:#00121f}
-  .ok{background:#27c26a;color:#00160a}
-  .danger{background:#ff5c5c;color:#250000}
-  .list{margin:14px auto;max-width:520px;text-align:left}
-  .stop{padding:12px;background:#22263a;border-radius:10px;margin-bottom:10px;border:1px solid #333}
-  #status{margin-top:10px;font-size:18px;color:#ffd166;min-height:1.4em}
-  .panel{background:#141b27;border:1px solid #233042;border-radius:12px;padding:14px;margin:16px auto;max-width:650px;text-align:left}
-  .panel h2{margin:0 0 8px;font-size:20px;color:#b8d3ff}
-  .row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-  .note{color:#aab8c6;font-size:13px;margin-top:6px}
-  #kmVal{font-size:28px;margin:6px 0}
+  :root{
+    --bg:#1f2228; --bg2:#272b33; --card:#2e333d; --border:#3a4150;
+    --text:#fff; --muted:#bac6d6; --acc:#4da3ff; --ok:#27c26a; --danger:#ff5c5c;
+  }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+       background:linear-gradient(135deg,var(--bg),#2a2e37); color:var(--text);
+       margin:0; padding:14px; text-align:center}
+  h1{margin:6px 0 10px; font-size:24px; color:var(--acc)}
+
+  /* КНОПКИ КОМПАКТНІ ВСЮДИ */
+  .lang-switch button, button{
+    height:34px; padding:0 10px; margin:5px; border:0; border-radius:8px;
+    font-weight:700; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .primary{background:var(--acc); color:#03121f}
+  .ok{background:var(--ok); color:#03160a}
+  .danger{background:var(--danger); color:#250000}
+  .ghost{background:#3a4150; color:#e6eefc}
+  button:hover{transform:translateY(-1px)}
+
+  input{
+    height:34px; padding:0 10px; margin:4px; width:min(320px, 92%);
+    border-radius:8px; border:1px solid var(--border); background:#1f2330; color:#fff; font-size:14px;
+  }
+
+  .panel{background:var(--bg2); border:1px solid var(--border); border-radius:12px;
+         padding:10px; margin:12px auto; max-width:820px; text-align:left}
+  .panel h2{margin:0 0 6px; font-size:16px; color:#d0dfff}
+  .row{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+  .note{color:var(--muted); font-size:12.5px; margin-top:4px}
+  .list{margin:8px auto; max-width:820px; text-align:left}
+  .stop{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center;
+        background:var(--card); border:1px solid var(--border);
+        border-radius:10px; padding:8px; margin-bottom:6px}
+  .stop .meta{font-weight:600; font-size:13.5px}
+  .stop .addr{color:var(--muted); font-size:12.5px}
+  .stop .actions button{margin:2px}
+  .current{outline:2px solid var(--acc)}
+  #status{margin-top:6px; color:#ffd166; min-height:1.2em}
+  #kmVal{font-size:20px; margin:6px 0}
+
+  /* МІНІ НАВІГАТОР */
+  #map{width:100%; max-width:800px; height:320px; border-radius:12px; outline:1px solid var(--border); margin:6px auto}
+  .leaflet-routing-container{font-size:12px}
+
+  footer{margin-top:18px; padding:12px; background:#1b1f27; border-top:1px solid var(--border); color:#aab8c6; font-size:14px}
 </style>
 </head>
 <body>
@@ -37,8 +72,8 @@
   <div class="panel">
     <h2 id="planTitle">План</h2>
     <div class="row">
-      <input id="label" placeholder="Назва (наприклад: Магазин Fiat)">
-      <input id="addr"  placeholder="Адреса (наприклад: Parma, Via Roma)">
+      <input id="label" placeholder="Назва (напр. Магазин Fiat)">
+      <input id="addr"  placeholder="Адреса (напр. Parma, Via Roma)">
     </div>
     <div class="row">
       <button id="addBtn" class="primary">Додати</button>
@@ -48,78 +83,220 @@
     </div>
     <div id="status"></div>
     <div class="list" id="list"></div>
-    <div class="note" id="hint">Порада: “Старт” відкриє Google Maps до першої адреси. “Завершити → Наступна” — до наступної.</div>
+    <div class="note" id="hint">“Старт” будує маршрут від поточної позиції у вбудованій карті.</div>
   </div>
 
-  <!-- Авто-лічильник кілометрів -->
+  <!-- ВБУДОВАНИЙ МІНІ-НАВІГАТОР -->
+  <div class="panel">
+    <h2 id="miniTitle">Міні-навігатор (всередині сторінки)</h2>
+    <div id="map"></div>
+    <div class="row">
+      <button class="primary" id="openFullBtn">Відкрити повний навігатор</button>
+    </div>
+    <div class="note">У вбудованому режимі є маршрут і кроки. Голосові підказки — у повному Google Maps.</div>
+  </div>
+
+  <!-- Лічильник км -->
   <div class="panel">
     <h2 id="kmTitle">Кілометри цього тижня</h2>
     <div id="kmVal">0.00 км</div>
     <div class="row" style="justify-content:flex-start">
       <button class="ok" id="gpsStartBtn">Старт трекінг</button>
-      <button class="danger" id="gpsStopBtn" disabled>Стоп</button>
+      <button class="ghost" id="gpsStopBtn" disabled>Стоп</button>
       <button class="danger" onclick="resetKm()" id="kmReset">Обнулити (почати понеділок)</button>
     </div>
     <div id="gpsInfo" class="note"></div>
-    <div class="note" id="kmNote">Щоб рахунок йшов — залиш сторінку відкритою та дай дозвіл на геолокацію.</div>
+    <div class="note" id="kmNote">Лічильник працює, коли сторінка активна і має доступ до геолокації.</div>
   </div>
 
-  <footer style="margin-top:40px;padding:16px;background:#0d121a;border-top:1px solid #233042;color:#aab8c6;font-size:14px;text-align:center">
-    <div>🚛 Bondar Denys</div>
-    <div>✉️ <a href="mailto:denis.bondarnote3@gmail.com" style="color:#cfe3ff;text-decoration:none">denis.bondarnote3@gmail.com</a></div>
-    <div style="margin-top:6px">Маршрут на день + автоматичний лічильник км</div>
-  </footer>
+  <footer>Бондар Денис</footer>
 
 <script>
-/* ===== Тексти (укр/іт) ===== */
+/* ===== локалізація (укр/іт) ===== */
 let lang = localStorage.getItem('route_lang') || 'uk';
 const T = {
   uk:{title:'Маршрут на день 🚛', plan:'План', add:'Додати', start:'Старт', next:'Завершити → Наступна',
-      reset:'Новий маршрут', hint:'Порада: “Старт” відкриє Google Maps до першої адреси. “Завершити → Наступна” — до наступної.',
-      phLabel:'Назва (наприклад: Магазин Fiat)', phAddr:'Адреса (наприклад: Parma, Via Roma)',
-      noStops:'Немає зупинок', running:'Виконується зупинка №', finished:'Маршрут завершено ✅',
-      kmTitle:'Кілометри цього тижня', kmReset:'Обнулити (почати понеділок)', kmNote:'Щоб рахунок йшов — залиш сторінку відкритою та дай дозвіл на геолокацію.'},
+      reset:'Новий маршрут', hint:'“Старт” будує маршрут від поточної позиції у вбудованій карті.',
+      phLabel:'Назва (напр. Магазин Fiat)', phAddr:'Адреса (напр. Parma, Via Roma)',
+      noStops:'Немає зупинок', running:'Зупинка №', finished:'Маршрут завершено ✅',
+      kmTitle:'Кілометри цього тижня',
+      miniTitle:'Міні-навігатор (всередині сторінки)', openFull:'Відкрити повний навігатор',
+      edit:'Редагувати', del:'Видалити', up:'▲', down:'▼', go:'Go'},
   it:{title:'Percorso della giornata 🚛', plan:'Piano', add:'Aggiungi', start:'Avvia', next:'Fine → Successiva',
-      reset:'Nuovo percorso', hint:'Suggerimento: “Avvia” apre Google Maps alla prima tappa. “Fine → Successiva” va alla prossima.',
+      reset:'Nuovo percorso', hint:'“Avvia” crea l’itinerario dalla tua posizione nella mappa incorporata.',
       phLabel:'Nome (es.: Negozio Fiat)', phAddr:'Indirizzo (es.: Parma, Via Roma)',
-      noStops:'Nessuna fermata', running:'Tappa in corso №', finished:'Percorso completato ✅',
-      kmTitle:'Chilometri di questa settimana', kmReset:'Azzera (inizia lunedì)', kmNote:'Per contare — lascia la pagina aperta e consenti la geolocalizzazione.'}
+      noStops:'Nessuna fermata', running:'Tappa №', finished:'Percorso completato ✅',
+      kmTitle:'Chilometri di questa settimana',
+      miniTitle:'Mini-navigatore (nella pagina)', openFull:'Apri navigatore completo',
+      edit:'Modifica', del:'Elimina', up:'▲', down:'▼', go:'Vai'}
 };
 function applyLang(){
   const t=T[lang];
   title.textContent=t.title; planTitle.textContent=t.plan;
-  addBtn.textContent=t.add; startBtn.textContent=t.start; nextBtn.textContent=t.next;
-  resetBtn.textContent=t.reset; hint.textContent=t.hint;
-  label.placeholder=t.phLabel; addr.placeholder=t.phAddr;
-  kmTitle.textContent=t.kmTitle; kmReset.textContent=t.kmReset; kmNote.textContent=t.kmNote;
+  addBtn.textContent=t.add; startBtn.textContent=t.start; nextBtn.textContent=t.next; resetBtn.textContent=t.reset;
+  hint.textContent=t.hint; label.placeholder=t.phLabel; addr.placeholder=t.phAddr;
+  kmTitle.textContent=t.kmTitle; miniTitle.textContent=t.miniTitle; openFullBtn.textContent=t.openFull;
 }
 function setLang(l){lang=l;localStorage.setItem('route_lang',l);state.lang=l;save();applyLang();render();}
 
-/* ===== Стан маршруту ===== */
-const STORAGE_KEY='truck_route_v3'; let state={stops:[],idx:-1,lang}; const $=id=>document.getElementById(id);
+/* ===== стан маршруту ===== */
+const STORAGE_KEY='truck_route_embed_v1';
+let state={stops:[],idx:-1,lang};
+const $=id=>document.getElementById(id);
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
-function load(){const raw=localStorage.getItem(STORAGE_KEY);if(raw){try{Object.assign(state,JSON.parse(raw));}catch{}}if(state.lang)lang=state.lang;}
-function render(){list.innerHTML='';state.stops.forEach((s,i)=>{const d=document.createElement('div');d.className='stop';d.textContent=(i+1)+'. '+(s.label?s.label+' — ':'')+s.addr+(i===state.idx?'  ←':'');list.appendChild(d);});nextBtn.disabled=!(state.idx>=0&&state.idx<state.stops.length);}
-addBtn.onclick=()=>{if(!addr.value.trim()){alert(lang==='uk'?'Введи адресу':'Inserisci l’indirizzo');return;}state.stops.push({label:label.value.trim(),addr:addr.value.trim()});label.value='';addr.value='';state.lang=lang;save();render();};
-startBtn.onclick=()=>{if(!state.stops.length){alert(T[lang].noStops);return;}state.idx=0;state.lang=lang;save();openMaps(state.stops[0].addr);status.textContent=T[lang].running+(state.idx+1);nextBtn.disabled=false;};
-nextBtn.onclick=()=>{state.idx++;if(state.idx>=state.stops.length){status.textContent=T[lang].finished;nextBtn.disabled=true;state.idx=-1;state.lang=lang;save();render();return;}state.lang=lang;save();openMaps(state.stops[state.idx].addr);status.textContent=T[lang].running+(state.idx+1);render();};
-resetBtn.onclick=()=>{if(!confirm(lang==='uk'?'Очистити маршрут?':'Pulire il percorso?'))return;state={stops:[],idx:-1,lang};save();status.textContent='';render();};
-function openMaps(addr){window.open('https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(addr),'_blank');}
+function load(){const raw=localStorage.getItem(STORAGE_KEY);if(raw){try{Object.assign(state,JSON.parse(raw));}catch{}}
+  if(state.lang)lang=state.lang;}
 
-/* ===== Лічильник км (GPS) ===== */
+/* ===== список зупинок ===== */
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));}
+function render(){
+  list.innerHTML='';
+  state.stops.forEach((s,i)=>{
+    const el=document.createElement('div');
+    el.className='stop'+(i===state.idx?' current':'');
+    el.innerHTML=`<div>
+        <div class="meta">${i+1}. ${s.label?escapeHtml(s.label):''}</div>
+        <div class="addr">${escapeHtml(s.addr)}</div>
+      </div>
+      <div class="actions">
+        <button class="ghost" data-act="go" data-i="${i}">${T[lang].go}</button>
+        <button class="ghost" data-act="edit" data-i="${i}">${T[lang].edit}</button>
+        <button class="ghost" data-act="up" data-i="${i}">${T[lang].up}</button>
+        <button class="ghost" data-act="down" data-i="${i}">${T[lang].down}</button>
+        <button class="danger" data-act="del" data-i="${i}">${T[lang].del}</button>
+      </div>`;
+    list.appendChild(el);
+  });
+  list.querySelectorAll('button').forEach(b=>b.addEventListener('click',onListAction));
+  nextBtn.disabled=!(state.idx>=0&&state.idx<state.stops.length);
+  updateEmbeddedNav(); // оновлюємо вбудовану карту
+}
+function onListAction(e){
+  const i=+e.currentTarget.dataset.i, act=e.currentTarget.dataset.act;
+  if(act==='del'){ if(confirm(lang==='uk'?'Видалити зупинку?':'Eliminare la tappa?')) state.stops.splice(i,1);
+  } else if(act==='up'&&i>0){ [state.stops[i-1],state.stops[i]]=[state.stops[i],state.stops[i-1]];
+    if(state.idx===i)state.idx=i-1; else if(state.idx===i-1)state.idx=i;
+  } else if(act==='down'&&i<state.stops.length-1){ [state.stops[i+1],state.stops[i]]=[state.stops[i],state.stops[i+1]];
+    if(state.idx===i)state.idx=i+1; else if(state.idx===i+1)state.idx=i;
+  } else if(act==='edit'){
+    const nl=prompt(lang==='uk'?'Нова назва:':'Nuovo nome:',state.stops[i].label||''); if(nl!==null)state.stops[i].label=nl.trim();
+    const na=prompt(lang==='uk'?'Нова адреса:':'Nuovo indirizzo:',state.stops[i].addr); if(na)state.stops[i].addr=na.trim();
+  } else if(act==='go'){ state.idx=i; startEmbeddedNav(state.stops[i].addr); }
+  state.lang=lang; save(); render();
+}
+
+/* ===== дії плану ===== */
+addBtn.onclick=()=>{const l=label.value.trim(), a=addr.value.trim();
+  if(!a){alert(lang==='uk'?'Введи адресу':'Inserisci l’indirizzo');return;}
+  state.stops.push({label:l,addr:a}); label.value=''; addr.value=''; state.lang=lang; save(); render();};
+
+startBtn.onclick=()=>{ if(!state.stops.length){alert(T[lang].noStops);return;}
+  state.idx=0; state.lang=lang; save();
+  status.textContent=T[lang].running+(state.idx+1);
+  nextBtn.disabled=false;
+  startEmbeddedNav(state.stops[0].addr); // ← ведемо всередині сторінки
+  render();
+};
+
+nextBtn.onclick=()=>{ state.idx++;
+  if(state.idx>=state.stops.length){
+    status.textContent=T[lang].finished; nextBtn.disabled=true; state.idx=-1; state.lang=lang; save(); render(); return;
+  }
+  status.textContent=T[lang].running+(state.idx+1);
+  state.lang=lang; save();
+  startEmbeddedNav(state.stops[state.idx].addr);
+  render();
+};
+
+resetBtn.onclick=()=>{ if(!confirm(lang==='uk'?'Очистити маршрут?':'Pulire il percorso?'))return;
+  state={stops:[],idx:-1,lang}; save(); status.textContent=''; render(); };
+
+/* ====== ВБУДОВАНА НАВІГАЦІЯ (Leaflet + OSRM) ====== */
+let map, routing;
+function initMap(){
+  if(map) return;
+  map = L.map('map',{zoomControl:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19, attribution:'©️ OpenStreetMap'
+  }).addTo(map);
+  map.setView([45.4642, 9.19], 6); // стартово на Північну Італію
+}
+
+async function geocodeAddress(address){
+  const url='https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(address);
+  const res=await fetch(url, {headers:{'Accept-Language': lang}});
+  const data=await res.json();
+  if(!data.length) throw new Error('Адресу не знайдено');
+  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+}
+
+function getCurrentLocation(){
+  return new Promise((resolve,reject)=>{
+    navigator.geolocation.getCurrentPosition(
+      p=>resolve([p.coords.latitude,p.coords.longitude]),
+      e=>reject(e),
+      {enableHighAccuracy:true,timeout:15000,maximumAge:5000}
+    );
+  });
+}
+
+async function startEmbeddedNav(address){
+  try{
+    initMap();
+    const [dstLat, dstLon] = await geocodeAddress(address);
+    const [curLat, curLon] = await getCurrentLocation();
+
+    if(routing){ map.removeControl(routing); routing=null; }
+    routing = L.Routing.control({
+      waypoints: [ L.latLng(curLat,curLon), L.latLng(dstLat,dstLon) ],
+      router: L.Routing.osrmv1({ serviceUrl:'https://router.project-osrm.org/route/v1' }),
+      showAlternatives:false, addWaypoints:false, draggableWaypoints:false, fitSelectedRoutes:true
+    }).addTo(map);
+
+  }catch(err){
+    alert((lang==='uk'?'Помилка навігації: ':'Errore navigazione: ')+err.message);
+  }
+}
+
+function currentAddress(){
+  if(state.idx>=0&&state.idx<state.stops.length) return state.stops[state.idx].addr;
+  if(state.stops.length) return state.stops[0].addr;
+  return null;
+}
+function updateEmbeddedNav(){
+  const a=currentAddress();
+  if(a && map && routing){ startEmbeddedNav(a); }
+}
+
+openFullBtn.onclick=()=>{
+  const a=currentAddress(); if(!a) return alert(T[lang].noStops);
+  const url='https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination='+encodeURIComponent(a)+'&travelmode=driving';
+  window.open(url,'_blank');
+};
+
+/* ===== ЛІЧИЛЬНИК КМ (активна вкладка) ===== */
 let totalKm=parseFloat(localStorage.getItem('weekly_km')||'0')||0;
 let lastPos=null,lastFixTime=0,watchId=null,fixCount=0;
 kmVal.textContent=totalKm.toFixed(2)+' км';
-function resetKm(){if(!confirm(lang==='uk'?'Обнулити лічильник за тиждень?':'Azzerare il contatore della settimana?'))return;totalKm=0;localStorage.setItem('weekly_km','0');kmVal.textContent='0.00 км';lastPos=null;fixCount=0;gpsInfo.textContent='';}
-function updateInfo(acc){gpsInfo.textContent=(lang==='uk'?'Фіксів: ':'Fix: ')+fixCount+(acc!==undefined? (lang==='uk'?` • Точність: ~${Math.round(acc)} м`:` • Precisione: ~${Math.round(acc)} m`):'');}
-function haversine(lat1,lon1,lat2,lon2){const R=6371,toRad=x=>x*Math.PI/180;const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-function onPosition(pos){const {latitude:lat,longitude:lon,accuracy}=pos.coords;const now=Date.now();if(accuracy&&accuracy>50){updateInfo(accuracy);return;}if(lastFixTime&&(now-lastFixTime)>180000){lastPos=null;}if(lastPos){const d=haversine(lastPos.lat,lastPos.lon,lat,lon);if(d>=0.02&&d<=5){totalKm+=d;localStorage.setItem('weekly_km',String(totalKm));kmVal.textContent=totalKm.toFixed(2)+' км';}}lastPos={lat,lon};lastFixTime=now;fixCount++;updateInfo(accuracy);}
-function onError(err){alert((lang==='uk'?'Помилка геолокації: ':'Errore geolocalizzazione: ')+err.message);}
-function startTracking(){if(!('geolocation'in navigator)){return alert(lang==='uk'?'Геолокація не підтримується':'La geolocalizzazione non è supportata');}if(watchId!==null)return;watchId=navigator.geolocation.watchPosition(onPosition,onError,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});gpsStartBtn.disabled=true;gpsStopBtn.disabled=false;}
-function stopTracking(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}gpsStartBtn.disabled=false;gpsStopBtn.disabled=true;}
-gpsStartBtn.onclick=startTracking;gpsStopBtn.onclick=stopTracking;
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopTracking();}else{startTracking();}});
-load();applyLang();render();
+function resetKm(){ if(!confirm(lang==='uk'?'Обнулити лічильник за тиждень?':'Azzerare il contatore della settimana?'))return;
+  totalKm=0; localStorage.setItem('weekly_km','0'); kmVal.textContent='0.00 км'; lastPos=null; fixCount=0; gpsInfo.textContent=''; }
+function updateInfo(acc){ gpsInfo.textContent='Фіксів: '+fixCount+(acc!==undefined?` • Точність: ~${Math.round(acc)} м`:'' ); }
+function haversine(a,b,c,d){const R=6371,rad=x=>x*Math.PI/180;const dLat=rad(c-a),dLon=rad(d-b);const A=Math.sin(dLat/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(A),Math.sqrt(1-A));}
+function onPosition(pos){const {latitude:lat,longitude:lon,accuracy}=pos.coords; const now=Date.now();
+  if(accuracy&&accuracy>50){updateInfo(accuracy);return;}
+  if(lastFixTime&&(now-lastFixTime)>180000){lastPos=null;}
+  if(lastPos){const d=haversine(lastPos.lat,lastPos.lon,lat,lon); if(d>=0.02&&d<=5){totalKm+=d; localStorage.setItem('weekly_km',String(totalKm)); kmVal.textContent=totalKm.toFixed(2)+' км';}}
+  lastPos={lat,lon}; lastFixTime=now; fixCount++; updateInfo(accuracy);
+}
+function onError(err){alert('Помилка геолокації: '+err.message);}
+function startTracking(){ if(!('geolocation'in navigator)) return alert('Геолокація не підтримується');
+  if(watchId!==null) return; watchId=navigator.geolocation.watchPosition(onPosition,onError,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  gpsStartBtn.disabled=true; gpsStopBtn.disabled=false; }
+function stopTracking(){ if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;} gpsStartBtn.disabled=false; gpsStopBtn.disabled=true; }
+gpsStartBtn.onclick=startTracking; gpsStopBtn.onclick=stopTracking;
+
+/* ===== init ===== */
+load(); applyLang(); render(); initMap();
 </script>
 </body>
 </html>

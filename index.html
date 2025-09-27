@@ -3,300 +3,319 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Маршрут на день</title>
-
-<!-- Leaflet (карта) + Routing Machine (маршрут) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
-
+<title>Маршрутка День</title>
 <style>
   :root{
-    --bg:#1f2228; --bg2:#272b33; --card:#2e333d; --border:#3a4150;
-    --text:#fff; --muted:#bac6d6; --acc:#4da3ff; --ok:#27c26a; --danger:#ff5c5c;
+    --bg:#000; --panel:#0a0a0a; --border:#1a1a1a; --text:#eaf0f6; --muted:#a0a6ad;
+    --accent:#2dd4bf; --accent-press:#22b8a4;
+    --danger:#ff5c5c; --danger-press:#e14b4b;
+    --nav:#3b82f6; --nav-press:#2563eb;
+    --warn:#ffb020;
   }
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-       background:linear-gradient(135deg,var(--bg),#2a2e37); color:var(--text);
-       margin:0; padding:14px; text-align:center}
-  h1{margin:6px 0 10px; font-size:24px; color:var(--acc)}
-
-  /* КНОПКИ КОМПАКТНІ ВСЮДИ */
-  .lang-switch button, button{
-    height:34px; padding:0 10px; margin:5px; border:0; border-radius:8px;
-    font-weight:700; font-size:13.5px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  header{padding:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:end;border-bottom:1px solid var(--border);background:#050505}
+  .lang{display:flex;gap:6px;margin-right:auto}
+  .chip{
+    padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:var(--panel);color:var(--text);
+    font-weight:700;cursor:pointer;transition:.15s;user-select:none
   }
-  .primary{background:var(--acc); color:#03121f}
-  .ok{background:var(--ok); color:#03160a}
-  .danger{background:var(--danger); color:#250000}
-  .ghost{background:#3a4150; color:#e6eefc}
-  button:hover{transform:translateY(-1px)}
-
-  input{
-    height:34px; padding:0 10px; margin:4px; width:min(320px, 92%);
-    border-radius:8px; border:1px solid var(--border); background:#1f2330; color:#fff; font-size:14px;
+  .chip.active{outline:2px solid var(--accent)}
+  .chip:active{transform:scale(.95)}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:12px;color:var(--muted)}
+  .field input{
+    background:var(--panel);border:1px solid var(--border);color:var(--text);
+    padding:10px 12px;border-radius:12px;outline:none;min-width:220px
   }
+  .btn{
+    border:none;font-weight:800;padding:12px 16px;border-radius:12px;cursor:pointer;
+    transition:all .15s ease;user-select:none
+  }
+  .btn:active{transform:scale(.96)}
+  .btn.start{background:var(--accent);color:#051314}
+  .btn.start:active{background:var(--accent-press)}
+  .btn.danger{background:var(--danger);color:#140c0c}
+  .btn.danger:active{background:var(--danger-press)}
+  .btn.nav{background:var(--nav);color:#fff}
+  .btn.nav:active{background:var(--nav-press)}
 
-  .panel{background:var(--bg2); border:1px solid var(--border); border-radius:12px;
-         padding:10px; margin:12px auto; max-width:820px; text-align:left}
-  .panel h2{margin:0 0 6px; font-size:16px; color:#d0dfff}
-  .row{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
-  .note{color:var(--muted); font-size:12.5px; margin-top:4px}
-  .list{margin:8px auto; max-width:820px; text-align:left}
-  .stop{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center;
-        background:var(--card); border:1px solid var(--border);
-        border-radius:10px; padding:8px; margin-bottom:6px}
-  .stop .meta{font-weight:600; font-size:13.5px}
-  .stop .addr{color:var(--muted); font-size:12.5px}
-  .stop .actions button{margin:2px}
-  .current{outline:2px solid var(--acc)}
-  #status{margin-top:6px; color:#ffd166; min-height:1.2em}
-  #kmVal{font-size:20px; margin:6px 0}
+  /* Shift card */
+  .shift{margin:10px 12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .badge{padding:2px 8px;border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--muted)}
+  .stat{display:flex;gap:6px;align-items:baseline}
+  .stat .k{font-size:12px;color:var(--muted)}
+  .stat .v{font-weight:800}
+  .red{color:var(--danger)}
+  .ok{color:var(--text)}
+  .list{padding:10px 12px;display:flex;gap:10px;flex-direction:column}
+  .pill{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);padding:10px 12px;border-radius:14px;font-size:15px}
+  .num{min-width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #2a2f37;background:#0f0f0f;color:#cfd6de;font-weight:900}
+  .addr{flex:1 1 auto}
+  .tag{border:1px solid var(--accent);color:var(--accent);padding:2px 6px;border-radius:999px;font-size:12px;font-weight:700}
+  .x{cursor:pointer;opacity:.9;padding:4px 8px;border-radius:8px}
+  .x:active{transform:scale(.9)}
+  .pill.current{border-color:var(--accent);box-shadow:0 0 0 1px rgba(45,212,191,.15) inset}
+  .pill.current .addr{ text-decoration:underline; }
+  .pill.current .num{ border-color:var(--accent); color:#0b1513; background:var(--accent); }
 
-  /* МІНІ НАВІГАТОР */
-  #map{width:100%; max-width:800px; height:320px; border-radius:12px; outline:1px solid var(--border); margin:6px auto}
-  .leaflet-routing-container{font-size:12px}
+  .card{margin:10px 12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kv{padding:10px;border:1px solid var(--border);border-radius:10px;text-align:center}
+  .kv .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .kv .v{font-size:22px;font-weight:800;margin-top:4px}
 
-  footer{margin-top:18px; padding:12px; background:#3b5da1; border-top:1px solid var(--border); color:rgb(6, 251, 251); font-size:14px}
+  footer{background:#0d0d0d;color:#eaf0f6;text-align:center;padding:16px;font-size:15px;border-top:2px solid var(--accent);font-weight:700;letter-spacing:.3px}
+  @media (max-width:700px){ .grid2{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
-  <div class="lang-switch">
-    <button onclick="setLang('uk')">🇺🇦 Українська</button>
-    <button onclick="setLang('it')">🇮🇹 Italiano</button>
+  <header>
+    <div class="lang">
+      <button class="chip" data-lang="uk">UA</button>
+      <button class="chip" data-lang="it">IT</button>
+    </div>
+    <div class="field" style="flex:1 1 280px">
+      <label data-i="label.addr">Адреса (місто, вулиця)</label>
+      <input id="addr" placeholder="Via Roma 10, Napoli">
+    </div>
+    <button class="btn start" id="addBtn" data-i="btn.add">Додати</button>
+    <div class="field">
+      <label data-i="label.speed">Швидкість (км/год)</label>
+      <input id="speed" type="number" value="85" min="20" max="120" step="1" style="width:110px">
+    </div>
+    <button class="btn start" id="startBtn" data-i="btn.start">Старт</button>
+  </header>
+
+  <!-- Shift card -->
+  <div class="shift" id="shiftCard">
+    <span class="badge" id="shiftStatus" data-i="shift.off">Зміна: викл</span>
+    <div class="stat"><span class="k" data-i="shift.started">Початок:</span> <span class="v" id="shiftStartV">—</span></div>
+    <div class="stat"><span class="k" data-i="shift.elapsed">Йде:</span> <span class="v" id="shiftElapsedV">—</span></div>
+    <div class="stat"><span class="k" data-i="shift.to13">До 13 год:</span> <span class="v ok" id="to13V">—</span></div>
+    <div class="stat"><span class="k" data-i="shift.to15">До 15 год:</span> <span class="v ok" id="to15V">—</span></div>
+    <button class="btn start" id="shiftStartBtn" data-i="shift.start">Почати зміну</button>
+    <button class="btn danger" id="shiftEndBtn" data-i="shift.end" style="display:none">Завершити зміну</button>
   </div>
 
-  <h1 id="title">Маршрут на день 🚛</h1>
+  <div class="list" id="list"></div>
 
-  <!-- План на день -->
-  <div class="panel">
-    <h2 id="planTitle">План</h2>
-    <div class="row">
-      <input id="label" placeholder="Назва (напр. Магазин Fiat)">
-      <input id="addr"  placeholder="Адреса (напр. Parma, Via Roma)">
+  <div class="card" id="info" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
+      <div id="infoTitle" style="font-weight:700"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn nav" id="navBtn" data-i="btn.nav">Навігатор</button>
+        <button class="btn danger" id="doneBtn" data-i="btn.done">Завершити</button>
+      </div>
     </div>
-    <div class="row">
-      <button id="addBtn" class="primary">Додати</button>
-      <button id="startBtn" class="ok">Старт</button>
-      <button id="nextBtn" class="ok" disabled>Завершити → Наступна</button>
-      <button id="resetBtn" class="danger">Новий маршрут</button>
+    <div class="grid2">
+      <div class="kv">
+        <div class="k" data-i="k.dist">Відстань</div>
+        <div class="v" id="distV">—</div>
+      </div>
+      <div class="kv">
+        <div class="k" data-i="k.time">Час</div>
+        <div class="v" id="timeV">—</div>
+      </div>
     </div>
-    <div id="status"></div>
-    <div class="list" id="list"></div>
-    <div class="note" id="hint">“Старт” будує маршрут від поточної позиції у вбудованій карті.</div>
   </div>
 
-  <!-- ВБУДОВАНИЙ МІНІ-НАВІГАТОР -->
-  <div class="panel">
-    <h2 id="miniTitle">Міні-навігатор (всередині сторінки)</h2>
-    <div id="map"></div>
-    <div class="row">
-      <button class="primary" id="openFullBtn">Відкрити повний навігатор</button>
-    </div>
-    <div class="note">У вбудованому режимі є маршрут і кроки. Голосові підказки — у повному Google Maps.</div>
-  </div>
-
-  <!-- Лічильник км -->
-  <div class="panel">
-    <h2 id="kmTitle">Кілометри цього тижня</h2>
-    <div id="kmVal">0.00 км</div>
-    <div class="row" style="justify-content:flex-start">
-      <button class="ok" id="gpsStartBtn">Старт трекінг</button>
-      <button class="ghost" id="gpsStopBtn" disabled>Стоп</button>
-      <button class="danger" onclick="resetKm()" id="kmReset">Обнулити (почати понеділок)</button>
-    </div>
-    <div id="gpsInfo" class="note"></div>
-    <div class="note" id="kmNote">Лічильник працює, коли сторінка активна і має доступ до геолокації.</div>
-  </div>
-
-  <footer>©️ Svillupatore Bondar Denis 2025.</footer>
+<footer> © Sviluppatore. Bondar Denis 2025.</footer>
 
 <script>
-/* ===== локалізація (укр/іт) ===== */
-let lang = localStorage.getItem('route_lang') || 'uk';
-const T = {
-  uk:{title:'Маршрут на день 🚛', plan:'План', add:'Додати', start:'Старт', next:'Завершити → Наступна',
-      reset:'Новий маршрут', hint:'“Старт” будує маршрут від поточної позиції у вбудованій карті.',
-      phLabel:'Назва (напр. Магазин Fiat)', phAddr:'Адреса (напр. Parma, Via Roma)',
-      noStops:'Немає зупинок', running:'Зупинка №', finished:'Маршрут завершено ✅',
-      kmTitle:'Кілометри цього тижня',
-      miniTitle:'Міні-навігатор (всередині сторінки)', openFull:'Відкрити повний навігатор',
-      edit:'Редагувати', del:'Видалити', up:'▲', down:'▼', go:'Go'},
-  it:{title:'Percorso della giornata 🚛', plan:'Piano', add:'Aggiungi', start:'Avvia', next:'Fine → Successiva',
-      reset:'Nuovo percorso', hint:'“Avvia” crea l’itinerario dalla tua posizione nella mappa incorporata.',
-      phLabel:'Nome (es.: Negozio Fiat)', phAddr:'Indirizzo (es.: Parma, Via Roma)',
-      noStops:'Nessuna fermata', running:'Tappa №', finished:'Percorso completato ✅',
-      kmTitle:'Chilometri di questa settimana',
-      miniTitle:'Mini-navigatore (nella pagina)', openFull:'Apri navigatore completo',
-      edit:'Modifica', del:'Elimina', up:'▲', down:'▼', go:'Vai'}
-};
-function applyLang(){
-  const t=T[lang];
-  title.textContent=t.title; planTitle.textContent=t.plan;
-  addBtn.textContent=t.add; startBtn.textContent=t.start; nextBtn.textContent=t.next; resetBtn.textContent=t.reset;
-  hint.textContent=t.hint; label.placeholder=t.phLabel; addr.placeholder=t.phAddr;
-  kmTitle.textContent=t.kmTitle; miniTitle.textContent=t.miniTitle; openFullBtn.textContent=t.openFull;
-}
-function setLang(l){lang=l;localStorage.setItem('route_lang',l);state.lang=l;save();applyLang();render();}
-
-/* ===== стан маршруту ===== */
-const STORAGE_KEY='truck_route_embed_v1';
-let state={stops:[],idx:-1,lang};
-const $=id=>document.getElementById(id);
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
-function load(){const raw=localStorage.getItem(STORAGE_KEY);if(raw){try{Object.assign(state,JSON.parse(raw));}catch{}}
-  if(state.lang)lang=state.lang;}
-
-/* ===== список зупинок ===== */
-function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));}
-function render(){
-  list.innerHTML='';
-  state.stops.forEach((s,i)=>{
-    const el=document.createElement('div');
-    el.className='stop'+(i===state.idx?' current':'');
-    el.innerHTML=`<div>
-        <div class="meta">${i+1}. ${s.label?escapeHtml(s.label):''}</div>
-        <div class="addr">${escapeHtml(s.addr)}</div>
-      </div>
-      <div class="actions">
-        <button class="ghost" data-act="go" data-i="${i}">${T[lang].go}</button>
-        <button class="ghost" data-act="edit" data-i="${i}">${T[lang].edit}</button>
-        <button class="ghost" data-act="up" data-i="${i}">${T[lang].up}</button>
-        <button class="ghost" data-act="down" data-i="${i}">${T[lang].down}</button>
-        <button class="danger" data-act="del" data-i="${i}">${T[lang].del}</button>
-      </div>`;
-    list.appendChild(el);
-  });
-  list.querySelectorAll('button').forEach(b=>b.addEventListener('click',onListAction));
-  nextBtn.disabled=!(state.idx>=0&&state.idx<state.stops.length);
-  updateEmbeddedNav(); // оновлюємо вбудовану карту
-}
-function onListAction(e){
-  const i=+e.currentTarget.dataset.i, act=e.currentTarget.dataset.act;
-  if(act==='del'){ if(confirm(lang==='uk'?'Видалити зупинку?':'Eliminare la tappa?')) state.stops.splice(i,1);
-  } else if(act==='up'&&i>0){ [state.stops[i-1],state.stops[i]]=[state.stops[i],state.stops[i-1]];
-    if(state.idx===i)state.idx=i-1; else if(state.idx===i-1)state.idx=i;
-  } else if(act==='down'&&i<state.stops.length-1){ [state.stops[i+1],state.stops[i]]=[state.stops[i],state.stops[i+1]];
-    if(state.idx===i)state.idx=i+1; else if(state.idx===i+1)state.idx=i;
-  } else if(act==='edit'){
-    const nl=prompt(lang==='uk'?'Нова назва:':'Nuovo nome:',state.stops[i].label||''); if(nl!==null)state.stops[i].label=nl.trim();
-    const na=prompt(lang==='uk'?'Нова адреса:':'Nuovo indirizzo:',state.stops[i].addr); if(na)state.stops[i].addr=na.trim();
-  } else if(act==='go'){ state.idx=i; startEmbeddedNav(state.stops[i].addr); }
-  state.lang=lang; save(); render();
-}
-
-/* ===== дії плану ===== */
-addBtn.onclick=()=>{const l=label.value.trim(), a=addr.value.trim();
-  if(!a){alert(lang==='uk'?'Введи адресу':'Inserisci l’indirizzo');return;}
-  state.stops.push({label:l,addr:a}); label.value=''; addr.value=''; state.lang=lang; save(); render();};
-
-startBtn.onclick=()=>{ if(!state.stops.length){alert(T[lang].noStops);return;}
-  state.idx=0; state.lang=lang; save();
-  status.textContent=T[lang].running+(state.idx+1);
-  nextBtn.disabled=false;
-  startEmbeddedNav(state.stops[0].addr); // ← ведемо всередині сторінки
-  render();
-};
-
-nextBtn.onclick=()=>{ state.idx++;
-  if(state.idx>=state.stops.length){
-    status.textContent=T[lang].finished; nextBtn.disabled=true; state.idx=-1; state.lang=lang; save(); render(); return;
+/* === I18N === */
+const I18N = {
+  uk:{
+    "label.addr":"Адреса (місто, вулиця)",
+    "label.speed":"Швидкість (км/год)",
+    "btn.add":"Додати","btn.start":"Старт","btn.nav":"Навігатор","btn.done":"Завершити",
+    "k.dist":"Відстань","k.time":"Час",
+    "msg.add":"Введи адресу.","msg.no":"Додай адресу.","msg.notfound":"Адресу не знайдено.","msg.noroute":"Маршрут не знайдено.",
+    "tag.next":"Наступна","title":"Маршрут",
+    "shift.off":"Зміна: викл","shift.started":"Початок:","shift.elapsed":"Йде:","shift.to13":"До 13 год:","shift.to15":"До 15 год:",
+    "shift.start":"Почати зміну","shift.end":"Завершити зміну",
+    "time.left":"залишилось","time.over":"перевищено"
+  },
+  it:{
+    "label.addr":"Indirizzo (città, via)",
+    "label.speed":"Velocità (km/h)",
+    "btn.add":"Aggiungi","btn.start":"Avvia","btn.nav":"Navigatore","btn.done":"Fine",
+    "k.dist":"Distanza","k.time":"Tempo",
+    "msg.add":"Inserisci l'indirizzo.","msg.no":"Aggiungi un indirizzo.","msg.notfound":"Indirizzo non trovato.","msg.noroute":"Percorso non trovato.",
+    "tag.next":"Prossima","title":"Percorso",
+    "shift.off":"Turno: off","shift.started":"Inizio:","shift.elapsed":"Trascorso:","shift.to13":"A 13 h:","shift.to15":"A 15 h:",
+    "shift.start":"Avvia turno","shift.end":"Termina turno",
+    "time.left":"restanti","time.over":"oltre"
   }
-  status.textContent=T[lang].running+(state.idx+1);
-  state.lang=lang; save();
-  startEmbeddedNav(state.stops[state.idx].addr);
-  render();
 };
-
-resetBtn.onclick=()=>{ if(!confirm(lang==='uk'?'Очистити маршрут?':'Pulire il percorso?'))return;
-  state={stops:[],idx:-1,lang}; save(); status.textContent=''; render(); };
-
-/* ====== ВБУДОВАНА НАВІГАЦІЯ (Leaflet + OSRM) ====== */
-let map, routing;
-function initMap(){
-  if(map) return;
-  map = L.map('map',{zoomControl:false});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19, attribution:'©️ OpenStreetMap'
-  }).addTo(map);
-  map.setView([45.4642, 9.19], 6); // стартово на Північну Італію
+let LANG = localStorage.getItem("md_lang") || "uk";
+function t(k){return I18N[LANG][k]||k;}
+function applyLang(){
+  document.querySelectorAll("[data-i]").forEach(el=>el.textContent=t(el.dataset.i));
+  document.getElementById("addr").placeholder = (LANG==="uk"?"Via Roma 10, Київ":"Via Roma 10, Napoli");
+  document.querySelectorAll(".chip").forEach(b=>b.classList.remove("active"));
+  const btn = document.querySelector(`.chip[data-lang='${LANG}']`); if(btn) btn.classList.add("active");
 }
+document.querySelectorAll(".chip").forEach(btn=>{
+  btn.onclick=()=>{LANG=btn.dataset.lang;localStorage.setItem("md_lang",LANG);applyLang();renderList();};
+});
+applyLang();
 
-async function geocodeAddress(address){
-  const url='https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(address);
-  const res=await fetch(url, {headers:{'Accept-Language': lang}});
-  const data=await res.json();
-  if(!data.length) throw new Error('Адресу не знайдено');
-  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-}
+/* === Утиліти === */
+const kmFmt = (n)=> new Intl.NumberFormat(LANG==="uk"?"uk-UA":"it-IT",{maximumFractionDigits:1}).format(n);
+const timeFmtTrip = (mins)=>{const h=Math.floor(mins/60), m=Math.round(mins%60);return LANG==="uk"?`${h} год ${String(m).padStart(2,'0')} хв`:`${h} h ${String(m).padStart(2,'0')} min`;};
+const pad2 = (n)=> String(n).padStart(2,"0");
 
-function getCurrentLocation(){
-  return new Promise((resolve,reject)=>{
+/* === Геолокація === */
+let startPos=null;
+async function getStart(){
+  if(startPos) return startPos;
+  return new Promise((resolve)=>{
+    if(!navigator.geolocation) return resolve({lat:41.9028,lon:12.4964});
     navigator.geolocation.getCurrentPosition(
-      p=>resolve([p.coords.latitude,p.coords.longitude]),
-      e=>reject(e),
-      {enableHighAccuracy:true,timeout:15000,maximumAge:5000}
+      p=>{startPos={lat:p.coords.latitude,lon:p.coords.longitude};resolve(startPos);},
+      _=>resolve({lat:41.9028,lon:12.4964}),
+      {enableHighAccuracy:true,timeout:8000}
     );
   });
 }
 
-async function startEmbeddedNav(address){
-  try{
-    initMap();
-    const [dstLat, dstLon] = await geocodeAddress(address);
-    const [curLat, curLon] = await getCurrentLocation();
-
-    if(routing){ map.removeControl(routing); routing=null; }
-    routing = L.Routing.control({
-      waypoints: [ L.latLng(curLat,curLon), L.latLng(dstLat,dstLon) ],
-      router: L.Routing.osrmv1({ serviceUrl:'https://router.project-osrm.org/route/v1' }),
-      showAlternatives:false, addWaypoints:false, draggableWaypoints:false, fitSelectedRoutes:true
-    }).addTo(map);
-
-  }catch(err){
-    alert((lang==='uk'?'Помилка навігації: ':'Errore navigazione: ')+err.message);
-  }
+/* === Геокодинг === */
+async function geocode(addr){
+  const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`;
+  const r=await fetch(url); if(!r.ok) return null;
+  const d=await r.json(); if(!d.length) return null;
+  return {lat:+d[0].lat,lon:+d[0].lon};
 }
 
-function currentAddress(){
-  if(state.idx>=0&&state.idx<state.stops.length) return state.stops[state.idx].addr;
-  if(state.stops.length) return state.stops[0].addr;
-  return null;
-}
-function updateEmbeddedNav(){
-  const a=currentAddress();
-  if(a && map && routing){ startEmbeddedNav(a); }
+/* === Маршрут === */
+async function getRouteMeters(start,dest){
+  const url=`https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${dest.lon},${dest.lat}?overview=false&steps=false`;
+  const r=await fetch(url); if(!r.ok) return null;
+  const d=await r.json(); if(!d.routes?.length) return null;
+  return d.routes[0].distance;
 }
 
-openFullBtn.onclick=()=>{
-  const a=currentAddress(); if(!a) return alert(T[lang].noStops);
-  const url='https://www.google.com/maps/dir/?api=1&origin=Current+Location&destination='+encodeURIComponent(a)+'&travelmode=driving';
-  window.open(url,'_blank');
+/* === Автозбереження списку/швидкості === */
+const LS_ITEMS="md_items",LS_SPEED="md_speed";
+const items=[];
+function save(){localStorage.setItem(LS_ITEMS,JSON.stringify(items));localStorage.setItem(LS_SPEED,document.getElementById('speed').value);}
+function load(){try{const arr=JSON.parse(localStorage.getItem(LS_ITEMS)||"[]");if(Array.isArray(arr))items.push(...arr);const sp=localStorage.getItem(LS_SPEED);if(sp)document.getElementById('speed').value=sp;}catch{}renderList();}
+
+/* === Рендер списку === */
+const listEl=document.getElementById('list');
+function renderList(){
+  listEl.innerHTML="";
+  items.forEach((addr,idx)=>{
+    const el=document.createElement("div");
+    el.className="pill"+(idx===0?" current":"");
+    el.innerHTML=`<span class="num">${idx+1}</span>
+      <span class="addr">${idx===0?"<u>"+addr+"</u>":addr}</span>
+      ${idx===0?`<span class="tag">${t("tag.next")}</span>`:""}
+      <span class="x">✕</span>`;
+    el.querySelector(".x").onclick=()=>{items.splice(idx,1);renderList();save();};
+    listEl.appendChild(el);
+  });
+}
+
+/* === Додати адресу === */
+addBtn.onclick=()=>{const a=addr.value.trim();if(!a){alert(t("msg.add"));return;}items.push(a);addr.value="";renderList();save();};
+
+/* === Старт/маршрут === */
+let lastDest=null;
+startBtn.onclick=async()=>{
+  if(!items.length){alert(t("msg.no"));return;}
+  const first=items[0], start=await getStart(), dest=await geocode(first);
+  if(!dest){alert(t("msg.notfound"));return;} lastDest=dest;
+  const meters=await getRouteMeters(start,dest); if(!meters){alert(t("msg.noroute"));return;}
+  const km=meters/1000, speedV=Math.max(20,Math.min(120,Number(speed.value)||85)), mins=(km/speedV)*60;
+  infoTitle.textContent=`${t("title")}: ${first}`; distV.textContent=`${kmFmt(km)} km`; timeV.textContent=timeFmtTrip(mins);
+  info.style.display="block"; save(); renderList();
 };
 
-/* ===== ЛІЧИЛЬНИК КМ (активна вкладка) ===== */
-let totalKm=parseFloat(localStorage.getItem('weekly_km')||'0')||0;
-let lastPos=null,lastFixTime=0,watchId=null,fixCount=0;
-kmVal.textContent=totalKm.toFixed(2)+' км';
-function resetKm(){ if(!confirm(lang==='uk'?'Обнулити лічильник за тиждень?':'Azzerare il contatore della settimana?'))return;
-  totalKm=0; localStorage.setItem('weekly_km','0'); kmVal.textContent='0.00 км'; lastPos=null; fixCount=0; gpsInfo.textContent=''; }
-function updateInfo(acc){ gpsInfo.textContent='Фіксів: '+fixCount+(acc!==undefined?` • Точність: ~${Math.round(acc)} м`:'' ); }
-function haversine(a,b,c,d){const R=6371,rad=x=>x*Math.PI/180;const dLat=rad(c-a),dLon=rad(d-b);const A=Math.sin(dLat/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(A),Math.sqrt(1-A));}
-function onPosition(pos){const {latitude:lat,longitude:lon,accuracy}=pos.coords; const now=Date.now();
-  if(accuracy&&accuracy>50){updateInfo(accuracy);return;}
-  if(lastFixTime&&(now-lastFixTime)>180000){lastPos=null;}
-  if(lastPos){const d=haversine(lastPos.lat,lastPos.lon,lat,lon); if(d>=0.02&&d<=5){totalKm+=d; localStorage.setItem('weekly_km',String(totalKm)); kmVal.textContent=totalKm.toFixed(2)+' км';}}
-  lastPos={lat,lon}; lastFixTime=now; fixCount++; updateInfo(accuracy);
-}
-function onError(err){alert('Помилка геолокації: '+err.message);}
-function startTracking(){ if(!('geolocation'in navigator)) return alert('Геолокація не підтримується');
-  if(watchId!==null) return; watchId=navigator.geolocation.watchPosition(onPosition,onError,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
-  gpsStartBtn.disabled=true; gpsStopBtn.disabled=false; }
-function stopTracking(){ if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;} gpsStartBtn.disabled=false; gpsStopBtn.disabled=true; }
-gpsStartBtn.onclick=startTracking; gpsStopBtn.onclick=stopTracking;
+/* === Done === */
+doneBtn.onclick=()=>{if(items.length){items.shift();renderList();save();info.style.display="none";if(items.length)startBtn.click();}};
 
-/* ===== init ===== */
-load(); applyLang(); render(); initMap();
+/* === Навігатор === */
+navBtn.onclick=async()=>{if(!lastDest)return;const s=await getStart();const url=`https://www.google.com/maps/dir/?api=1&origin=${s.lat},${s.lon}&destination=${lastDest.lat},${lastDest.lon}&travelmode=driving`;window.open(url,"_blank");};
+
+/* === SHIFT логіка === */
+const LS_SHIFT_START="md_shift_start";
+let shiftStartTs = null; // ms epoch
+
+function fmtHM(date){
+  const h=pad2(date.getHours()), m=pad2(date.getMinutes());
+  return `${h}:${m}`;
+}
+function mmToHM(mm){
+  const neg = mm<0; const m = Math.abs(mm);
+  const h = Math.floor(m/60), mi = Math.round(m%60);
+  return (neg?"-":"") + `${h}:${pad2(mi)}`;
+}
+function updateShiftUI(){
+  const statusEl = document.getElementById('shiftStatus');
+  const startV = document.getElementById('shiftStartV');
+  const elapsedV = document.getElementById('shiftElapsedV');
+  const to13V = document.getElementById('to13V');
+  const to15V = document.getElementById('to15V');
+  const btnStart = document.getElementById('shiftStartBtn');
+  const btnEnd = document.getElementById('shiftEndBtn');
+
+  if(!shiftStartTs){
+    statusEl.textContent = t("shift.off");
+    startV.textContent = "—";
+    elapsedV.textContent = "—";
+    to13V.textContent = "—"; to13V.className = "v ok";
+    to15V.textContent = "—"; to15V.className = "v ok";
+    btnStart.style.display="inline-block"; btnEnd.style.display="none";
+    return;
+  }
+  const now = Date.now();
+  const elapsedMin = Math.floor((now - shiftStartTs)/60000);
+  const startDate = new Date(shiftStartTs);
+  statusEl.textContent = `${t("shift.started")} ${fmtHM(startDate)}`;
+  startV.textContent = fmtHM(startDate);
+  elapsedV.textContent = mmToHM(elapsedMin);
+
+  const rem13 = 13*60 - elapsedMin;
+  const rem15 = 15*60 - elapsedMin;
+
+  // до 13 год
+  to13V.textContent = rem13 >= 0 ? `${mmToHM(rem13)} ${t("time.left")}` : `${mmToHM(rem13)} ${t("time.over")}`;
+  to13V.className = "v " + ((rem13 <= 60) ? "red" : "ok");
+
+  // до 15 год
+  to15V.textContent = rem15 >= 0 ? `${mmToHM(rem15)} ${t("time.left")}` : `${mmToHM(rem15)} ${t("time.over")}`;
+  to15V.className = "v " + ((rem15 <= 60) ? "red" : "ok");
+
+  btnStart.style.display="none"; btnEnd.style.display="inline-block";
+}
+function startShift(){
+  shiftStartTs = Date.now();
+  localStorage.setItem(LS_SHIFT_START, String(shiftStartTs));
+  updateShiftUI();
+}
+function endShift(){
+  shiftStartTs = null;
+  localStorage.removeItem(LS_SHIFT_START);
+  updateShiftUI();
+}
+
+document.getElementById('shiftStartBtn').onclick = startShift;
+document.getElementById('shiftEndBtn').onclick = endShift;
+
+/* Тікер оновлення кожні 30 сек (достатньо для годин) */
+setInterval(()=>{ if(shiftStartTs) updateShiftUI(); }, 30000);
+
+/* Відновлення shift при старті */
+(function initShift(){
+  const saved = localStorage.getItem(LS_SHIFT_START);
+  if(saved){ const ts = Number(saved); if(!isNaN(ts)) shiftStartTs = ts; }
+  updateShiftUI();
+})();
+
+/* === Init === */
+load();
 </script>
 </body>
 </html>

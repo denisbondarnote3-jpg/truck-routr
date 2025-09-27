@@ -2,36 +2,34 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Маршрутка День</title>
 <style>
   :root{
     --bg:#000; --panel:#0a0a0a; --border:#1a1a1a; --text:#eaf0f6; --muted:#a0a6ad;
-    --accent:#2dd4bf; --accent-press:#22b8a4;
-    --danger:#ff5c5c; --danger-press:#e14b4b;
+    --accent:#2dd4bf; --accent-press:#22b8a4; --danger:#ff5c5c; --danger-press:#e14b4b;
     --nav:#3b82f6; --nav-press:#2563eb;
-    --warn:#ffb020;
   }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%; margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+    -webkit-text-size-adjust:100%; overscroll-behavior:contain;
+  }
+  body{ padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                 env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
   header{padding:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:end;border-bottom:1px solid var(--border);background:#050505}
   .lang{display:flex;gap:6px;margin-right:auto}
-  .chip{
-    padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:var(--panel);color:var(--text);
-    font-weight:700;cursor:pointer;transition:.15s;user-select:none
-  }
+  .chip{padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:var(--panel);color:var(--text);font-weight:700;cursor:pointer;transition:.15s}
   .chip.active{outline:2px solid var(--accent)}
   .chip:active{transform:scale(.95)}
   .field{display:flex;flex-direction:column;gap:6px}
   .field label{font-size:12px;color:var(--muted)}
-  .field input{
-    background:var(--panel);border:1px solid var(--border);color:var(--text);
-    padding:10px 12px;border-radius:12px;outline:none;min-width:220px
-  }
-  .btn{
-    border:none;font-weight:800;padding:12px 16px;border-radius:12px;cursor:pointer;
-    transition:all .15s ease;user-select:none
-  }
+  .field input{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;outline:none;min-width:220px;font-size:16px}
+  .btn{border:none;font-weight:800;padding:12px 16px;border-radius:12px;cursor:pointer;transition:all .15s ease;user-select:none}
   .btn:active{transform:scale(.96)}
   .btn.start{background:var(--accent);color:#051314}
   .btn.start:active{background:var(--accent-press)}
@@ -40,14 +38,6 @@
   .btn.nav{background:var(--nav);color:#fff}
   .btn.nav:active{background:var(--nav-press)}
 
-  /* Shift card */
-  .shift{margin:10px 12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  .badge{padding:2px 8px;border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--muted)}
-  .stat{display:flex;gap:6px;align-items:baseline}
-  .stat .k{font-size:12px;color:var(--muted)}
-  .stat .v{font-weight:800}
-  .red{color:var(--danger)}
-  .ok{color:var(--text)}
   .list{padding:10px 12px;display:flex;gap:10px;flex-direction:column}
   .pill{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);padding:10px 12px;border-radius:14px;font-size:15px}
   .num{min-width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #2a2f37;background:#0f0f0f;color:#cfd6de;font-weight:900}
@@ -56,8 +46,8 @@
   .x{cursor:pointer;opacity:.9;padding:4px 8px;border-radius:8px}
   .x:active{transform:scale(.9)}
   .pill.current{border-color:var(--accent);box-shadow:0 0 0 1px rgba(45,212,191,.15) inset}
-  .pill.current .addr{ text-decoration:underline; }
-  .pill.current .num{ border-color:var(--accent); color:#0b1513; background:var(--accent); }
+  .pill.current .addr{text-decoration:underline;}
+  .pill.current .num{border-color:var(--accent);color:#0b1513;background:var(--accent);}
 
   .card{margin:10px 12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -65,11 +55,95 @@
   .kv .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
   .kv .v{font-size:22px;font-weight:800;margin-top:4px}
 
+  .shift{margin:10px 12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .badge{padding:2px 8px;border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--muted)}
+  .stat{display:flex;gap:6px;align-items:baseline}
+  .stat .k{font-size:12px;color:var(--muted)}
+  .stat .v{font-weight:800}
+  .red{color:var(--danger)} .ok{color:var(--text)}
+
   footer{background:#0d0d0d;color:#eaf0f6;text-align:center;padding:16px;font-size:15px;border-top:2px solid var(--accent);font-weight:700;letter-spacing:.3px}
+
+  /* Splash */
+  #splash{position:fixed;inset:0;display:grid;place-items:center;background:#000;z-index:9999;animation:fadeIn .25s ease both;}
+  #splash.hide{animation:fadeOut .35s ease both;}
+  .sbox{text-align:center;padding:24px;max-width:560px}
+  .simg{width:min(86vw,520px);margin:0 auto 12px;display:block}
+  .stitle{font-size:22px;font-weight:900;margin:6px 0 12px}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes fadeOut{from{opacity:1}to{opacity:0}}
+
+  /* Truck animations: тільки заїзд + мигалки */
+  .truck { transform: translateX(-120%); animation: driveIn .9s cubic-bezier(.2,.8,.2,1) .1s forwards; }
+  @keyframes driveIn { to { transform: translateX(0); } }
+  .blink-head { animation: headBlink 1.2s ease-in-out .9s infinite alternate; }
+  @keyframes headBlink { from{opacity:.35} to{opacity:1} }
+  .blink-stop { animation: stopBlink 1.4s steps(1) 1.1s infinite; }
+  @keyframes stopBlink { 0%,40%{opacity:.3} 50%,90%{opacity:1} 100%{opacity:.3} }
+
   @media (max-width:700px){ .grid2{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
+
+  <!-- Splash -->
+  <div id="splash">
+    <div class="sbox">
+      <svg class="simg" viewBox="0 0 900 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Car Carrier Truck">
+        <defs>
+          <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a222a"/><stop offset="1" stop-color="#0a0f14"/></linearGradient>
+          <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fd0ff" stop-opacity="0.85"/><stop offset="1" stop-color="#3b5b7a" stop-opacity="0.85"/></linearGradient>
+          <radialGradient id="tire" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#16181a"/><stop offset="1" stop-color="#0a0c0e"/></radialGradient>
+          <radialGradient id="rim" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#eaf0f6"/><stop offset="1" stop-color="#9aa6b2"/></radialGradient>
+          <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#1faea0"/></linearGradient>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="6" result="b"/><feOffset dy="3" result="o"/><feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer><feMerge><feMergeNode in="o"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <ellipse cx="450" cy="305" rx="380" ry="20" fill="#0b0f13"/>
+        <g class="truck" filter="url(#shadow)">
+          <path d="M120,240 h160 a12,12 0 0 0 12-12 v-36 a12,12 0 0 0-12-12 h-60 l-20-20 h-80 a14,14 0 0 0-14,14 v54 a12,12 0 0 0 12,12Z" fill="url(#metal)" stroke="#2dd4bf" stroke-width="3"/>
+          <path d="M210,180 h60 a12,12 0 0 1 12,12 v34 h-112 v-22 л20-24 h20Z" fill="url(#glass)" stroke="#9fd0ff" stroke-width="2"/>
+          <rect x="128" y="224" width="70" height="10" rx="3" fill="#0e141a" stroke="#2dd4bf" stroke-width="2"/>
+          <rect class="blink-head" x="128" y="214" width="18" height="8" rx="2" fill="#ffd580" stroke="#ffb020" stroke-width="2"/>
+          <rect class="blink-head" x="180" y="214" width="18" height="8" rx="2" fill="#ffd580" stroke="#ffb020" stroke-width="2"/>
+          <rect x="205" y="196" width="70" height="40" rx="3" fill="transparent" stroke="#2dd4bf" stroke-width="2"/>
+          <rect x="274" y="196" width="10" height="16" rx="2" fill="#0a0f14" stroke="#2dd4bf" stroke-width="2"/>
+          <rect x="300" y="250" width="520" height="22" rx="4" fill="url(#metal)" stroke="url(#accent)" stroke-width="3"/>
+          <path d="M330,180 L820,180 L790,205 L300,205 Z" fill="url(#metal)" stroke="url(#accent)" stroke-width="3"/>
+          <path d="M300,205 L270,230 L320,230 L350,205 Z" fill="#0f1419" stroke="#2dd4bf" stroke-width="2"/>
+          <path d="M360,205 L360,250 M520,205 L520,250 M680,205 L680,250" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round"/>
+          <g><circle cx="200" cy="270" r="28" fill="url(#tire)"/><circle cx="200" cy="270" r="16" fill="url(#rim)"/><circle cx="260" cy="270" r="28" fill="url(#tire)"/><circle cx="260" cy="270" r="16" fill="url(#rim)"/></g>
+          <g><circle cx="620" cy="270" r="30" fill="url(#tire)"/><circle cx="620" cy="270" r="16" fill="url(#rim)"/><circle cx="680" cy="270" r="30" fill="url(#tire)"/><circle cx="680" cy="270" r="16" fill="url(#rim)"/><circle cx="740" cy="270" r="30" fill="url(#tire)"/><circle cx="740" cy="270" r="16" fill="url(#rim)"/></g>
+          <g>
+            <path d="M360,160 h90 a12,12 0 0 1 12,12 v10 h-140 v-8 л16-14 Z" fill="#111820" stroke="#eaf0f6" stroke-width="2"/>
+            <circle cx="385" cy="186" r="8" fill="url(#tire)"/><circle cx="385" cy="186" r="4" fill="url(#rim)"/>
+            <circle cx="435" cy="186" r="8" fill="url(#tire)"/><circle cx="435" cy="186" r="4" fill="url(#rim)"/>
+            <path d="M500,160 h90 a12,12 0 0 1 12,12 v10 h-140 v-8 л16-14 Z" fill="#101722" stroke="#eaf0f6" stroke-width="2"/>
+            <circle cx="525" cy="186" r="8" fill="url(#tire)"/><circle cx="525" cy="186" r="4" fill="url(#rim)"/>
+            <circle cx="575" cy="186" r="8" fill="url(#tire)"/><circle cx="575" cy="186" r="4" fill="url(#rim)"/>
+            <path d="M640,160 h90 a12,12 0 0 1 12,12 v10 h-140 v-8 л16-14 Z" fill="#0f1520" stroke="#eaf0f6" stroke-width="2"/>
+            <circle cx="665" cy="186" r="8" fill="url(#tire)"/><circle cx="665" cy="186" r="4" fill="url(#rim)"/>
+            <circle cx="715" cy="186" r="8" fill="url(#tire)"/><circle cx="715" cy="186" r="4" fill="url(#rim)"/>
+          </g>
+          <g>
+            <path d="M340,230 h80 a12,12 0 0 1 12,12 v8 h-120 v-6 л12-14 Z" fill="#10161d" stroke="#eaf0f6" stroke-width="2"/>
+            <circle cx="360" cy="255" r="8" fill="url(#tire)"/><circle cx="360" cy="255" r="4" fill="url(#rim)"/>
+            <circle cx="400" cy="255" r="8" fill="url(#tire)"/><circle cx="400" cy="255" r="4" fill="url(#rim)"/>
+            <path d="M460,230 h80 a12,12 0 0 1 12,12 v8 h-120 v-6 л12-14 З" fill="#0f141b" stroke="#eaf0f6" stroke-width="2"/>
+            <circle cx="480" cy="255" r="8" fill="url(#tire)"/><circle cx="480" cy="255" r="4" fill="url(#rim)"/>
+            <circle cx="520" cy="255" r="8" fill="url(#tire)"/><circle cx="520" cy="255" r="4" fill="url(#rim)"/>
+            <path d="M580,230 h80 a12,12 0 0 1 12,12 v8 h-120 v-6 л12-14 З" fill="#0e151c" stroke="#eaf0f6" stroke-width="2"/>
+            <circle cx="600" cy="255" r="8" fill="url(#tire)"/><circle cx="600" cy="255" r="4" fill="url(#rim)"/>
+            <circle cx="640" cy="255" r="8" fill="url(#tire)"/><circle cx="640" cy="255" r="4" fill="url(#rim)"/>
+          </g>
+          <rect class="blink-stop" x="812" y="246" width="10" height="8" rx="2" fill="#ff6b6b" stroke="#ff3b3b" stroke-width="2"/>
+        </g>
+      </svg>
+      <div class="stitle" id="splashTitle">Маршрутка День</div>
+      <button class="btn nav" id="enterBtn">Відкрити</button>
+    </div>
+  </div>
+
+  <!-- Управління -->
   <header>
     <div class="lang">
       <button class="chip" data-lang="uk">UA</button>
@@ -87,7 +161,7 @@
     <button class="btn start" id="startBtn" data-i="btn.start">Старт</button>
   </header>
 
-  <!-- Shift card -->
+  <!-- Зміна -->
   <div class="shift" id="shiftCard">
     <span class="badge" id="shiftStatus" data-i="shift.off">Зміна: викл</span>
     <div class="stat"><span class="k" data-i="shift.started">Початок:</span> <span class="v" id="shiftStartV">—</span></div>
@@ -98,8 +172,10 @@
     <button class="btn danger" id="shiftEndBtn" data-i="shift.end" style="display:none">Завершити зміну</button>
   </div>
 
+  <!-- Список адрес -->
   <div class="list" id="list"></div>
 
+  <!-- Інфо по маршруту -->
   <div class="card" id="info" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
       <div id="infoTitle" style="font-weight:700"></div>
@@ -120,75 +196,60 @@
     </div>
   </div>
 
-<footer> © Sviluppatore. Bondar Denis 2025.</footer>
+  <footer> © Sviluppatore. Bondar Denis 2025.</footer>
 
 <script>
+/* — iOS: блок pinch/double-tap зума — */
+(()=>{let last=0;document.addEventListener('touchend',e=>{const now=Date.now();if(now-last<=300)e.preventDefault();last=now;},{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});})();
+
 /* === I18N === */
-const I18N = {
-  uk:{
-    "label.addr":"Адреса (місто, вулиця)",
-    "label.speed":"Швидкість (км/год)",
-    "btn.add":"Додати","btn.start":"Старт","btn.nav":"Навігатор","btn.done":"Завершити",
-    "k.dist":"Відстань","k.time":"Час",
-    "msg.add":"Введи адресу.","msg.no":"Додай адресу.","msg.notfound":"Адресу не знайдено.","msg.noroute":"Маршрут не знайдено.",
-    "tag.next":"Наступна","title":"Маршрут",
-    "shift.off":"Зміна: викл","shift.started":"Початок:","shift.elapsed":"Йде:","shift.to13":"До 13 год:","shift.to15":"До 15 год:",
-    "shift.start":"Почати зміну","shift.end":"Завершити зміну",
-    "time.left":"залишилось","time.over":"перевищено"
-  },
-  it:{
-    "label.addr":"Indirizzo (città, via)",
-    "label.speed":"Velocità (km/h)",
-    "btn.add":"Aggiungi","btn.start":"Avvia","btn.nav":"Navigatore","btn.done":"Fine",
-    "k.dist":"Distanza","k.time":"Tempo",
-    "msg.add":"Inserisci l'indirizzo.","msg.no":"Aggiungi un indirizzo.","msg.notfound":"Indirizzo non trovato.","msg.noroute":"Percorso non trovato.",
-    "tag.next":"Prossima","title":"Percorso",
-    "shift.off":"Turno: off","shift.started":"Inizio:","shift.elapsed":"Trascorso:","shift.to13":"A 13 h:","shift.to15":"A 15 h:",
-    "shift.start":"Avvia turno","shift.end":"Termina turno",
-    "time.left":"restanti","time.over":"oltre"
-  }
+const I18N={
+  uk:{"label.addr":"Адреса (місто, вулиця)","label.speed":"Швидкість (км/год)","btn.add":"Додати","btn.start":"Старт","btn.nav":"Навігатор","btn.done":"Завершити","k.dist":"Відстань","k.time":"Час","msg.add":"Введи адресу.","msg.no":"Додай адресу.","msg.notfound":"Адресу не знайдено.","msg.noroute":"Маршрут не знайдено.","tag.next":"Наступна","title":"Маршрут","shift.off":"Зміна: викл","shift.started":"Початок:","shift.elapsed":"Йде:","shift.to13":"До 13 год:","shift.to15":"До 15 год:","shift.start":"Почати зміну","shift.end":"Завершити зміну","time.left":"залишилось","time.over":"перевищено","splash.title":"Маршрутка День","splash.enter":"Відкрити"},
+  it:{"label.addr":"Indirizzo (città, via)","label.speed":"Velocità (km/h)","btn.add":"Aggiungi","btn.start":"Avvia","btn.nav":"Navigatore","btn.done":"Fine","k.dist":"Distanza","k.time":"Tempo","msg.add":"Inserisci l'indirizzo.","msg.no":"Aggiungi un indirizzo.","msg.notfound":"Indirizzo non trovato.","msg.noroute":"Percorso non trovato.","tag.next":"Prossima","title":"Percorso","shift.off":"Turno: off","shift.started":"Inizio:","shift.elapsed":"Trascorso:","shift.to13":"A 13 h:","shift.to15":"A 15 h:","shift.start":"Avvia turno","shift.end":"Termina turno","time.left":"restanti","time.over":"oltre","splash.title":"Navetta Giorno","splash.enter":"Apri"}
 };
-let LANG = localStorage.getItem("md_lang") || "uk";
+let LANG=localStorage.getItem("md_lang")||"uk";
 function t(k){return I18N[LANG][k]||k;}
 function applyLang(){
   document.querySelectorAll("[data-i]").forEach(el=>el.textContent=t(el.dataset.i));
-  document.getElementById("addr").placeholder = (LANG==="uk"?"Via Roma 10, Київ":"Via Roma 10, Napoli");
+  document.getElementById("addr").placeholder=(LANG==="uk"?"Via Roma 10, Київ":"Via Roma 10, Napoli");
   document.querySelectorAll(".chip").forEach(b=>b.classList.remove("active"));
-  const btn = document.querySelector(`.chip[data-lang='${LANG}']`); if(btn) btn.classList.add("active");
+  const b=document.querySelector(`.chip[data-lang='${LANG}']`); if(b) b.classList.add("active");
+  splashTitle.textContent=t('splash.title'); enterBtn.textContent=t('splash.enter');
 }
 document.querySelectorAll(".chip").forEach(btn=>{
   btn.onclick=()=>{LANG=btn.dataset.lang;localStorage.setItem("md_lang",LANG);applyLang();renderList();};
 });
 applyLang();
 
-/* === Утиліти === */
-const kmFmt = (n)=> new Intl.NumberFormat(LANG==="uk"?"uk-UA":"it-IT",{maximumFractionDigits:1}).format(n);
-const timeFmtTrip = (mins)=>{const h=Math.floor(mins/60), m=Math.round(mins%60);return LANG==="uk"?`${h} год ${String(m).padStart(2,'0')} хв`:`${h} h ${String(m).padStart(2,'0')} min`;};
-const pad2 = (n)=> String(n).padStart(2,"0");
+/* Splash hide */
+enterBtn.onclick=()=>{splash.classList.add('hide');setTimeout(()=>splash.remove(),350);};
 
-/* === Геолокація === */
+/* === Utils === */
+const kmFmt=n=>new Intl.NumberFormat(LANG==="uk"?"uk-UA":"it-IT",{maximumFractionDigits:1}).format(n);
+const timeFmtTrip=mins=>{const h=Math.floor(mins/60),m=Math.round(mins%60);return LANG==="uk"?`${h} год ${String(m).padStart(2,'0')} хв`:`${h} h ${String(m).padStart(2,'0')} min`;};
+
+/* === Geo === */
 let startPos=null;
 async function getStart(){
   if(startPos) return startPos;
-  return new Promise((resolve)=>{
-    if(!navigator.geolocation) return resolve({lat:41.9028,lon:12.4964});
+  return new Promise(res=>{
+    if(!navigator.geolocation) return res({lat:41.9028,lon:12.4964});
     navigator.geolocation.getCurrentPosition(
-      p=>{startPos={lat:p.coords.latitude,lon:p.coords.longitude};resolve(startPos);},
-      _=>resolve({lat:41.9028,lon:12.4964}),
+      p=>{startPos={lat:p.coords.latitude,lon:p.coords.longitude};res(startPos);},
+      _=>res({lat:41.9028,lon:12.4964}),
       {enableHighAccuracy:true,timeout:8000}
     );
   });
 }
 
-/* === Геокодинг === */
+/* === Geocode + Route === */
 async function geocode(addr){
   const url=`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`;
   const r=await fetch(url); if(!r.ok) return null;
   const d=await r.json(); if(!d.length) return null;
   return {lat:+d[0].lat,lon:+d[0].lon};
 }
-
-/* === Маршрут === */
 async function getRouteMeters(start,dest){
   const url=`https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${dest.lon},${dest.lat}?overview=false&steps=false`;
   const r=await fetch(url); if(!r.ok) return null;
@@ -196,21 +257,21 @@ async function getRouteMeters(start,dest){
   return d.routes[0].distance;
 }
 
-/* === Автозбереження списку/швидкості === */
+/* === Storage === */
 const LS_ITEMS="md_items",LS_SPEED="md_speed";
 const items=[];
-function save(){localStorage.setItem(LS_ITEMS,JSON.stringify(items));localStorage.setItem(LS_SPEED,document.getElementById('speed').value);}
-function load(){try{const arr=JSON.parse(localStorage.getItem(LS_ITEMS)||"[]");if(Array.isArray(arr))items.push(...arr);const sp=localStorage.getItem(LS_SPEED);if(sp)document.getElementById('speed').value=sp;}catch{}renderList();}
+function save(){localStorage.setItem(LS_ITEMS,JSON.stringify(items));localStorage.setItem(LS_SPEED,speed.value);}
+function load(){try{const arr=JSON.parse(localStorage.getItem(LS_ITEMS)||"[]");if(Array.isArray(arr))items.push(...arr);const sp=localStorage.getItem(LS_SPEED);if(sp)speed.value=sp;}catch{}renderList();}
 
-/* === Рендер списку === */
+/* === Render list === */
 const listEl=document.getElementById('list');
 function renderList(){
   listEl.innerHTML="";
-  items.forEach((addr,idx)=>{
+  items.forEach((a,idx)=>{
     const el=document.createElement("div");
     el.className="pill"+(idx===0?" current":"");
     el.innerHTML=`<span class="num">${idx+1}</span>
-      <span class="addr">${idx===0?"<u>"+addr+"</u>":addr}</span>
+      <span class="addr">${idx===0?"<u>"+a+"</u>":a}</span>
       ${idx===0?`<span class="tag">${t("tag.next")}</span>`:""}
       <span class="x">✕</span>`;
     el.querySelector(".x").onclick=()=>{items.splice(idx,1);renderList();save();};
@@ -218,101 +279,66 @@ function renderList(){
   });
 }
 
-/* === Додати адресу === */
+/* === Add / Start / Done / Nav === */
 addBtn.onclick=()=>{const a=addr.value.trim();if(!a){alert(t("msg.add"));return;}items.push(a);addr.value="";renderList();save();};
 
-/* === Старт/маршрут === */
 let lastDest=null;
 startBtn.onclick=async()=>{
   if(!items.length){alert(t("msg.no"));return;}
   const first=items[0], start=await getStart(), dest=await geocode(first);
   if(!dest){alert(t("msg.notfound"));return;} lastDest=dest;
   const meters=await getRouteMeters(start,dest); if(!meters){alert(t("msg.noroute"));return;}
-  const km=meters/1000, speedV=Math.max(20,Math.min(120,Number(speed.value)||85)), mins=(km/speedV)*60;
+  const km=meters/1000, v=Math.max(20,Math.min(120,Number(speed.value)||85)), mins=(km/v)*60;
   infoTitle.textContent=`${t("title")}: ${first}`; distV.textContent=`${kmFmt(km)} km`; timeV.textContent=timeFmtTrip(mins);
   info.style.display="block"; save(); renderList();
 };
-
-/* === Done === */
 doneBtn.onclick=()=>{if(items.length){items.shift();renderList();save();info.style.display="none";if(items.length)startBtn.click();}};
-
-/* === Навігатор === */
 navBtn.onclick=async()=>{if(!lastDest)return;const s=await getStart();const url=`https://www.google.com/maps/dir/?api=1&origin=${s.lat},${s.lon}&destination=${lastDest.lat},${lastDest.lon}&travelmode=driving`;window.open(url,"_blank");};
 
-/* === SHIFT логіка === */
+/* === SHIFT (повністю виправлено) === */
 const LS_SHIFT_START="md_shift_start";
-let shiftStartTs = null; // ms epoch
+let shiftStartTs=null;
+/* кеш елементів */
+const shiftStatus=document.getElementById('shiftStatus');
+const shiftStartV=document.getElementById('shiftStartV');
+const shiftElapsedV=document.getElementById('shiftElapsedV');
+const to13V_=document.getElementById('to13V');
+const to15V_=document.getElementById('to15V');
+const shiftStartBtn=document.getElementById('shiftStartBtn');
+const shiftEndBtn=document.getElementById('shiftEndBtn');
 
-function fmtHM(date){
-  const h=pad2(date.getHours()), m=pad2(date.getMinutes());
-  return `${h}:${m}`;
-}
-function mmToHM(mm){
-  const neg = mm<0; const m = Math.abs(mm);
-  const h = Math.floor(m/60), mi = Math.round(m%60);
-  return (neg?"-":"") + `${h}:${pad2(mi)}`;
-}
+function pad(n){return String(n).padStart(2,"0");}
+function fmtHM(d){return `${pad(d.getHours())}:${pad(d.getMinutes())}`;}
+function mmToHM(mm){const neg=mm<0;const m=Math.abs(mm);const h=Math.floor(m/60),mi=Math.round(m%60);return (neg?'-':'')+`${h}:${pad(mi)}`;}
+
 function updateShiftUI(){
-  const statusEl = document.getElementById('shiftStatus');
-  const startV = document.getElementById('shiftStartV');
-  const elapsedV = document.getElementById('shiftElapsedV');
-  const to13V = document.getElementById('to13V');
-  const to15V = document.getElementById('to15V');
-  const btnStart = document.getElementById('shiftStartBtn');
-  const btnEnd = document.getElementById('shiftEndBtn');
-
+  const statusEl=shiftStatus,startV=shiftStartV,elapsedV=shiftElapsedV,to13V=to13V_,to15V=to15V_,btnS=shiftStartBtn,btnE=shiftEndBtn;
   if(!shiftStartTs){
-    statusEl.textContent = t("shift.off");
-    startV.textContent = "—";
-    elapsedV.textContent = "—";
-    to13V.textContent = "—"; to13V.className = "v ok";
-    to15V.textContent = "—"; to15V.className = "v ok";
-    btnStart.style.display="inline-block"; btnEnd.style.display="none";
+    statusEl.textContent=t("shift.off");
+    startV.textContent="—"; elapsedV.textContent="—";
+    to13V.textContent="—"; to13V.className="v ok";
+    to15V.textContent="—"; to15V.className="v ok";
+    btnS.style.display="inline-block"; btnE.style.display="none";
     return;
   }
-  const now = Date.now();
-  const elapsedMin = Math.floor((now - shiftStartTs)/60000);
-  const startDate = new Date(shiftStartTs);
-  statusEl.textContent = `${t("shift.started")} ${fmtHM(startDate)}`;
-  startV.textContent = fmtHM(startDate);
-  elapsedV.textContent = mmToHM(elapsedMin);
+  const now=Date.now(), elapsed=Math.floor((now-shiftStartTs)/60000), st=new Date(shiftStartTs);
+  statusEl.textContent=`${t("shift.started")} ${fmtHM(st)}`;
+  startV.textContent=fmtHM(st);
+  elapsedV.textContent=mmToHM(elapsed);
 
-  const rem13 = 13*60 - elapsedMin;
-  const rem15 = 15*60 - elapsedMin;
+  const rem13=13*60-elapsed, rem15=15*60-elapsed;
+  to13V.textContent = rem13>=0 ? `${mmToHM(rem13)} ${t("time.left")}` : `${mmToHM(rem13)} ${t("time.over")}`;
+  to13V.className   = "v " + ((rem13<=60) ? "red" : "ok");
+  to15V.textContent = rem15>=0 ? `${mmToHM(rem15)} ${t("time.left")}` : `${mmToHM(rem15)} ${t("time.over")}`;
+  to15V.className   = "v " + ((rem15<=60) ? "red" : "ok");
 
-  // до 13 год
-  to13V.textContent = rem13 >= 0 ? `${mmToHM(rem13)} ${t("time.left")}` : `${mmToHM(rem13)} ${t("time.over")}`;
-  to13V.className = "v " + ((rem13 <= 60) ? "red" : "ok");
-
-  // до 15 год
-  to15V.textContent = rem15 >= 0 ? `${mmToHM(rem15)} ${t("time.left")}` : `${mmToHM(rem15)} ${t("time.over")}`;
-  to15V.className = "v " + ((rem15 <= 60) ? "red" : "ok");
-
-  btnStart.style.display="none"; btnEnd.style.display="inline-block";
+  btnS.style.display="none"; btnE.style.display="inline-block";
 }
-function startShift(){
-  shiftStartTs = Date.now();
-  localStorage.setItem(LS_SHIFT_START, String(shiftStartTs));
-  updateShiftUI();
-}
-function endShift(){
-  shiftStartTs = null;
-  localStorage.removeItem(LS_SHIFT_START);
-  updateShiftUI();
-}
-
-document.getElementById('shiftStartBtn').onclick = startShift;
-document.getElementById('shiftEndBtn').onclick = endShift;
-
-/* Тікер оновлення кожні 30 сек (достатньо для годин) */
-setInterval(()=>{ if(shiftStartTs) updateShiftUI(); }, 30000);
-
-/* Відновлення shift при старті */
-(function initShift(){
-  const saved = localStorage.getItem(LS_SHIFT_START);
-  if(saved){ const ts = Number(saved); if(!isNaN(ts)) shiftStartTs = ts; }
-  updateShiftUI();
-})();
+function startShift(){shiftStartTs=Date.now();localStorage.setItem(LS_SHIFT_START,String(shiftStartTs));updateShiftUI();}
+function endShift(){shiftStartTs=null;localStorage.removeItem(LS_SHIFT_START);updateShiftUI();}
+shiftStartBtn.onclick=startShift; shiftEndBtn.onclick=endShift;
+setInterval(()=>{ if(shiftStartTs) updateShiftUI(); },30000);
+(function initShift(){const saved=localStorage.getItem(LS_SHIFT_START);if(saved){const ts=Number(saved);if(!isNaN(ts))shiftStartTs=ts;}updateShiftUI();})();
 
 /* === Init === */
 load();

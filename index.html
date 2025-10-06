@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ProgrammaPRO</title>
+
+<style>
+:root{
+  --bg:#000; --panel:#0a0a0a; --panel2:#121212; --panel3:#161616; --border:#1a1a1a;
+  --text:#eaf0f6; --muted:#a0a6ad; --accent:#2dd4bf; --danger:#ef4444;
+  --nav:#2563eb; --nav2:#1e40af; --green:#16a34a; --green2:#15803d; --gold:#ffd700;
+}
+:root.light{
+  --bg:#f6f7f9; --panel:#ffffff; --panel2:#f4f6f8; --panel3:#eceff2; --border:#dfe3e8;
+  --text:#111418; --muted:#65707c;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+
+/* Splash */
+#splash{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;
+  z-index:9999;background:#000;color:#fff;text-align:center}
+#splash::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.85)),url('truck.jpg') center/cover no-repeat;
+}
+#splash .box{position:relative;padding:28px 22px;border-radius:14px;backdrop-filter:blur(2px)}
+#splash h1{margin:0 0 16px;font-size:32px;font-weight:1000;color:#00ff7f;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+#splash .btn{background:var(--nav);color:#fff;font-weight:900;border:none;padding:12px 20px;border-radius:12px;cursor:pointer}
+.hide{animation:fadeOut .35s both}@keyframes fadeOut{to{opacity:0;visibility:hidden}}
+
+/* Flag title */
+.flag{margin:16px auto 8px;width:min(980px,92vw);height:54px;border-radius:12px;
+  background:linear-gradient(90deg,#009246 0 33.3%,#fff 33.3% 66.6%,#ce2b37 66.6%);
+  display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:1000;color:#00ff7f}
+
+/* Weather */
+.weather{width:min(980px,92vw);margin:0 auto 8px;font-size:14px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:6px 10px;background:var(--panel);border:1px solid var(--border);border-radius:10px}
+.w-left{display:flex;align-items:center;gap:8px}
+.w-dot{width:8px;height:8px;border-radius:50%;background:#ffd54a;box-shadow:0 0 10px #ffd54a}
+
+/* Toolbar */
+.toolbar{width:min(980px,92vw);margin:0 auto 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);font-weight:700;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.select{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--panel);color:var(--text)}
+#themeBtn{width:40px;height:40px;border-radius:10px}
+
+/* Sections */
+.section{width:min(980px,92vw);margin:0 auto 16px;padding:12px;border:1px solid var(--border);border-radius:12px}
+.section.route{background:var(--panel2)}
+.section.places{background:var(--panel3)}
+.section.chat{background:var(--panel2)}
+.section.shift{background:var(--panel3)}
+.section h3{margin:0 0 10px}
+
+/* Fields / list */
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.field input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text)}
+.list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.item{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--border);padding:8px;border-radius:10px}
+.badge{min-width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #2a2f37;background:#0f0f0f;color:#cfd6de;font-weight:900}
+
+/* Buttons colors */
+.btn-blue { background:var(--nav);  color:#fff; border-color:#1f50c0;}
+.btn-blue:active{background:var(--nav2)}
+.btn-green{ background:var(--green); color:#fff; border-color:#126b2f;}
+.btn-green:active{background:var(--green2)}
+.btn-red  { background:var(--danger); color:#fff; border-color:#b91c1c;}
+
+/* Chat */
+.chat-list{background:#fff;color:#111;border:1px solid #ccc;border-radius:12px;
+  padding:10px;max-height:260px;overflow:auto}
+.chat-msg{background:#f6f7f9;border:1px solid #e6e8ec;border-radius:10px;padding:8px 10px;margin-bottom:8px}
+.chat-meta{font-size:12px;color:#667085}
+
+/* Shift timer */
+.shift-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.countdown{font-size:42px;font-weight:900;text-align:center;padding:10px 0;border:1px dashed var(--border);border-radius:12px;background:#0b0b0b}
+.shift-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.small{padding:6px 10px;font-size:14px}
+
+/* Footer */
+footer{text-align:center;padding:20px;color:var(--danger);font-weight:700;border-top:2px solid var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="splash">
+  <div class="box">
+    <h1>ProgrammaPRO</h1>
+    <button class="btn" id="enterBtn">Увійти</button>
+  </div>
+</div>
+
+<!-- Title -->
+<div class="flag">ProgrammaPRO</div>
+
+<!-- Weather -->
+<div class="weather" id="weatherRow">
+  <div class="w-left"><span class="w-dot"></span><span id="wCity">Погода</span></div>
+  <div id="wInfo">☀️ —°C · Вітер — км/год</div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <button id="themeBtn" class="btn" title="Тема">🌙</button>
+  <select id="langSel" class="select">
+    <option value="uk">Українська</option>
+    <option value="it">Italiano</option>
+    <option value="en">English</option>
+  </select>
+  <button id="toggleSaved" class="btn" data-i="btn.places">📋 Місця</button>
+  <button id="toggleAdd" class="btn" data-i="btn.addPlace">➕ Нове місце</button>
+  <button id="adminBtn" class="btn" data-i="btn.admin">🔐 Адмін</button>
+  <a class="btn" href="games/snake.html" target="_blank" rel="noopener" data-i="btn.snake">🎮 Змійка</a>
+  <a class="btn" href="games/tictactoe.html" target="_blank" rel="noopener" data-i="btn.ttt">❌⭕ Хрестики</a>
+</div>
+
+<!-- Places (shared) -->
+<div class="section places" id="placesSaved" style="display:none">
+  <h3 data-i="section.saved">Збережені місця (для всіх)</h3>
+  <div id="pList" class="list"></div>
+</div>
+
+<div class="section places" id="placesAdd" style="display:none">
+  <h3 data-i="section.add">Додати нове місце</h3>
+  <div class="row">
+    <div class="field" style="flex:2 1 320px">
+      <label data-i="label.addrOrCoords">Адреса або координати</label>
+      <input id="pLoc" placeholder="Via Napoli або 40.96,14.19">
+    </div>
+    <div class="field">
+      <label data-i="label.name">Назва</label>
+      <input id="pName" placeholder="Парковка біля поля">
+    </div>
+    <button class="btn" id="pUseMe" data-i="btn.myplace">📡 Моє місце</button>
+    <button class="btn btn-green" id="pAdd" data-i="btn.save">💾 Зберегти</button>
+  </div>
+</div>
+
+<!-- Route (local) -->
+<div class="section route" id="route">
+  <h3 data-i="section.route">Маршрут</h3>
+  <div class="row">
+    <div class="field" style="flex:1 1 300px">
+      <label data-i="label.addr">Адреса</label>
+      <input id="addr" placeholder="Via Roma 10, Napoli">
+    </div>
+    <button class="btn btn-green" id="addBtn" data-i="btn.add" type="button">Додати</button>
+    <div class="field">
+      <label data-i="label.speed">Швидкість (км/год)</label>
+      <input id="speed" type="number" value="85" min="20" max="120" style="width:100px">
+    </div>
+    <button class="btn btn-blue" id="startBtn" data-i="btn.start" type="button">Старт</button>
+    <button class="btn btn-red" id="doneBtn" style="display:none" data-i="btn.done" type="button">Завершити</button>
+  </div>
+  <div id="list" class="list"></div>
+  <div id="info" style="display:none;margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--panel)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div id="infoTitle" style="font-weight:700;"></div>
+      <button class="btn btn-blue" id="navBtn" data-i="btn.nav" type="button">Навігатор</button>
+    </div>
+    <div><span data-i="k.dist">Відстань:</span> <span id="distV">—</span> | <span data-i="k.time">Час:</span> <span id="timeV">—</span></div>
+  </div>
+</div>
+
+<!-- SHIFT (13/15 год) -->
+<div class="section shift" id="shiftSection">
+  <h3 data-i="shift.title">Зміна</h3>
+  <div class="shift-grid">
+    <div class="shift-buttons">
+      <button class="btn" id="shift13" data-duration="13" data-i="shift.13">Почати 13 год</button>
+      <button class="btn" id="shift15" data-duration="15" data-i="shift.15">Почати 15 год</button>
+      <button class="btn small btn-red" id="resetBtn" data-i="shift.reset">♻️ Скинути</button>
+    </div>
+    <div class="countdown" id="countdown">—:—:—</div>
+    <div class="chat-meta" id="shiftInfo">—</div>
+  </div>
+</div>
+
+<!-- Chat -->
+<div class="section chat" id="chatBox">
+  <h3 data-i="chat.title">Повідомлення</h3>
+  <div id="chatWindow" class="chat-list"></div>
+  <div class="row" style="margin-top:8px">
+    <div class="field" style="flex:1 1 360px">
+      <input id="chatMsg" placeholder="Написати...">
+    </div>
+    <button class="btn btn-blue" id="chatSend" data-i="chat.send">Надіслати</button>
+    <button class="btn btn-red" id="chatClear" style="display:none" data-i="chat.clear">Очистити все</button>
+  </div>
+  <div class="chat-meta" style="margin-top:6px" id="chatHint">Зберігаються лише 100 останніх повідомлень.</div>
+</div>
+
+<footer>©️ Developer Bondar Denys 2025.</footer>
+
+<!-- Base scripts -->
+<script>
+/* Splash */
+document.getElementById('enterBtn').onclick=()=>{
+  const s=document.getElementById('splash'); s.classList.add('hide'); setTimeout(()=>s.remove(),350);
+};
+
+/* Theme */
+const themeBtn=document.getElementById('themeBtn');
+function setTheme(mode){
+  if(mode==='light'){ document.documentElement.classList.add('light'); themeBtn.textContent='☀️'; }
+  else{ document.documentElement.classList.remove('light'); themeBtn.textContent='🌙'; }
+  localStorage.setItem('themeMode',mode);
+}
+setTheme(localStorage.getItem('themeMode')||'dark');
+themeBtn.onclick=()=> setTheme(document.documentElement.classList.contains('light')?'dark':'light');
+
+/* i18n */
+const I18N={
+  uk:{'btn.places':'📋 Місця','btn.addPlace':'➕ Нове місце','btn.admin':'🔐 Адмін','btn.snake':'🎮 Змійка','btn.ttt':'❌⭕ Хрестики',
+      'section.saved':'Збережені місця (для всіх)','section.add':'Додати нове місце',
+      'label.addrOrCoords':'Адреса або координати','label.name':'Назва','btn.myplace':'📡 Моє місце','btn.save':'💾 Зберегти',
+      'section.route':'Маршрут','label.addr':'Адреса','btn.add':'Додати','label.speed':'Швидкість (км/год)','btn.start':'Старт','btn.done':'Завершити',
+      'btn.nav':'Навігатор','k.dist':'Відстань:','k.time':'Час:',
+      'shift.title':'Зміна','shift.13':'Почати 13 год','shift.15':'Почати 15 год','shift.reset':'♻️ Скинути',
+      'shift.left':'Залишилось','shift.end':'Кінець о','shift.done':'Зміна завершена!',
+      'chat.title':'Повідомлення','chat.send':'Надіслати','chat.clear':'Очистити все',
+      'chat.hint':'Зберігаються лише 100 останніх повідомлень.','weather.wind':'Вітер'},
+  it:{'btn.places':'📋 Luoghi','btn.addPlace':'➕ Nuovo luogo','btn.admin':'🔐 Admin','btn.snake':'🎮 Serpente','btn.ttt':'❌⭕ Tris',
+      'section.saved':'Luoghi salvati (per tutti)','section.add':'Aggiungi nuovo luogo',
+      'label.addrOrCoords':'Indirizzo o coordinate','label.name':'Nome','btn.myplace':'📡 Mio luogo','btn.save':'💾 Salva',
+      'section.route':'Percorso','label.addr':'Indirizzo','btn.add':'Aggiungi','label.speed':'Velocità (km/h)','btn.start':'Avvia','btn.done':'Fine',
+      'btn.nav':'Navigatore','k.dist':'Distanza:','k.time':'Tempo:',
+      'shift.title':'Turno','shift.13':'Avvia 13h','shift.15':'Avvia 15h','shift.reset':'♻️ Reset',
+      'shift.left':'Rimasti','shift.end':'Fine alle','shift.done':'Turno terminato!',
+      'chat.title':'Messaggi','chat.send':'Invia','chat.clear':'Cancella tutto',
+      'chat.hint':'Si conservano solo gli ultimi 100 messaggi.','weather.wind':'Vento'},
+  en:{'btn.places':'📋 Places','btn.addPlace':'➕ New place','btn.admin':'🔐 Admin','btn.snake':'🎮 Snake','btn.ttt':'❌⭕ Tic-Tac-Toe',
+      'section.saved':'Saved places (shared)','section.add':'Add new place',
+      'label.addrOrCoords':'Address or coordinates','label.name':'Name','btn.myplace':'📡 My location','btn.save':'💾 Save',
+      'section.route':'Route','label.addr':'Address','btn.add':'Add','label.speed':'Speed (km/h)','btn.start':'Start','btn.done':'Done',
+      'btn.nav':'Navigator','k.dist':'Distance:','k.time':'Time:',
+      'shift.title':'Shift','shift.13':'Start 13h','shift.15':'Start 15h','shift.reset':'♻️ Reset',
+      'shift.left':'Left','shift.end':'Ends at','shift.done':'Shift finished!',
+      'chat.title':'Messages','chat.send':'Send','chat.clear':'Clear all',
+      'chat.hint':'Only last 100 messages are stored.','weather.wind':'Wind'}
+};
+const langSel=document.getElementById('langSel');
+let LANG=localStorage.getItem('lang')||'uk';
+langSel.value=LANG;
+function t(k){return I18N[LANG][k]||k;}
+function applyLang(){
+  document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));
+  const hint=document.getElementById('chatHint'); if(hint) hint.textContent=t('chat.hint');
+  const pLoc=document.getElementById('pLoc'); const pName=document.getElementById('pName'); const addr=document.getElementById('addr');
+  if(pLoc)  pLoc.placeholder  = (LANG==='it'?'Via Napoli o 40.96,14.19':LANG==='en'?'Via Napoli or 40.96,14.19':'Via Napoli або 40.96,14.19');
+  if(pName) pName.placeholder = (LANG==='it'?'Parcheggio vicino ai campi':LANG==='en'?'Parking near fields':'Парковка біля поля');
+  if(addr)  addr.placeholder  = (LANG==='it'?'Via Roma 10, Napoli':LANG==='en'?'Via Roma 10, Naples':'Via Roma 10, Napoli');
+  const b1=document.querySelector('[data-i="btn.snake"]'); const b2=document.querySelector('[data-i="btn.ttt"]');
+  if(b1) b1.textContent=t('btn.snake'); if(b2) b2.textContent=t('btn.ttt');
+  // безпечні виклики
+  if(typeof window.updateWeatherUI==='function') window.updateWeatherUI();
+  if(typeof window.updateUI==='function' && typeof loadShift==='function') window.updateUI(loadShift()||{});
+}
+langSel.onchange=()=>{ LANG=langSel.value; localStorage.setItem('lang',LANG); applyLang(); };
+applyLang();
+
+/* Глобальна функція для відкриття збережених місць */
+function openPlace(q){
+  const m=q.trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  const url=m?`https://www.google.com/maps/dir/?api=1&destination=${m[1]},${m[2]}&travelmode=driving`
+             :`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+  if(/Android/i.test(navigator.userAgent)) window.location.href=url; else window.open(url,'_blank');
+}
+</script>
+
+<!-- ===== Route module (ізоляція, без конфліктів) ===== -->
+<script>
+(function(){
+  function getLang(){ try{ return (window.LANG||document.getElementById('langSel')?.value||'uk'); }catch{ return 'uk'; } }
+  function tAlert(key){
+    const L=getLang(), d={needAddr:{uk:'Введи адресу.',it:'Inserisci indirizzo.',en:'Enter address.'},
+    addAddr:{uk:'Додай адресу.',it:'Aggiungi un indirizzo.',en:'Add an address.'},
+    notFound:{uk:'Адресу не знайдено.',it:'Indirizzo non trovato.',en:'Address not found.'},
+    routeNF:{uk:'Маршрут не знайдено.',it:'Percorso non trovato.',en:'Route not found.'}};
+    return (d[key]||{})[L]||d[key]?.uk||'';
+  }
+  const $=id=>document.getElementById(id);
+  document.addEventListener('DOMContentLoaded', init);
+
+  function init(){
+    const listEl=$('list'), addr=$('addr'), addBtn=$('addBtn'), startBtn=$('startBtn'), doneBtn=$('doneBtn'),
+          info=$('info'), infoTitle=$('infoTitle'), distV=$('distV'), timeV=$('timeV'), navBtn=$('navBtn'), speed=$('speed');
+    if(!listEl||!addr||!addBtn) return;
+
+    let items=loadItems(); let lastDest=null;
+    function loadItems(){ try{ return JSON.parse(localStorage.getItem('md_items')||'[]'); }catch{ return []; } }
+    function saveItems(){ localStorage.setItem('md_items', JSON.stringify(items)); }
+
+    function renderList(){
+      listEl.innerHTML='';
+      if(!items.length){ const d=document.createElement('div'); d.style.color='var(--muted)'; d.textContent='—'; listEl.appendChild(d); return; }
+      items.forEach((a,i)=>{
+        const row=document.createElement('div'); row.className='item';
+        row.innerHTML=`<span class="badge">${i+1}</span><span style="flex:1">${a}</span><button class="btn btn-red" type="button">✖</button>`;
+        row.querySelector('button').onclick=()=>{ items.splice(i,1); saveItems(); renderList(); info.style.display='none'; doneBtn.style.display='none'; };
+        listEl.appendChild(row);
+      });
+    }
+    renderList();
+
+    function addAddress(){
+      const a=(addr.value||'').trim();
+      if(!a){ alert(tAlert('needAddr')); addr.focus(); return; }
+      items.push(a); addr.value=''; saveItems(); renderList();
+    }
+    addBtn.addEventListener('click', addAddress);
+    addr.addEventListener('keydown', e=>{ if(e.key==='Enter') addAddress(); });
+
+    startBtn.addEventListener('click', async ()=>{
+      if(!items.length){ alert(tAlert('addAddr')); return; }
+      const first=items[0]; const L=getLang();
+      infoTitle.textContent = `${L==='it'?'Percorso':L==='en'?'Route':'Маршрут'}: ${first}`;
+      const s=await getStart(); const d=await geocode(first);
+      if(!d){ alert(tAlert('notFound')); return; }
+      const meters=await getRouteMeters(s,d); if(!meters){ alert(tAlert('routeNF')); }
+      const km=(meters||0)/1000, v=Math.max(20,Math.min(120,Number(speed.value)||85)), mins=(km/v)*60;
+      distV.textContent=km.toFixed(1)+' km';
+      timeV.textContent=(L==='uk')?Math.floor(mins/60)+' год '+String(Math.round(mins%60)).padStart(2,'0')+' хв'
+                                   :Math.floor(mins/60)+' h '+String(Math.round(mins%60)).padStart(2,'0')+' min';
+      info.style.display='block'; doneBtn.style.display='inline-block'; lastDest=d;
+    });
+
+    doneBtn.addEventListener('click', ()=>{ if(items.length){ items.shift(); saveItems(); renderList(); info.style.display='none'; doneBtn.style.display='none'; }});
+    navBtn.addEventListener('click', async ()=>{ if(!lastDest) return; const s=await getStart(); openNavigator(s,lastDest); });
+
+    async function getStart(){
+      return new Promise(res=>{
+        if(!navigator.geolocation) return res({lat:41.9028,lon:12.4964});
+        navigator.geolocation.getCurrentPosition(
+          p=>res({lat:p.coords.latitude,lon:p.coords.longitude}),
+          _=>res({lat:41.9028,lon:12.4964}),
+          {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
+        );
+      });
+    }
+    async function geocode(q){
+      const m=q.trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if(m) return {lat:+m[1], lon:+m[2]};
+      try{
+        const L=getLang();
+        const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=1`,
+          {headers:{'Accept-Language':L==='it'?'it-IT':L==='en'?'en-GB':'uk-UA'}});
+        if(r.ok){ const d=await r.json(); if(Array.isArray(d)&&d.length) return {lat:+d[0].lat,lon:+d[0].lon}; }
+      }catch(e){}
+      try{
+        const L=getLang();
+        const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=${L}`);
+        if(r.ok){ const d=await r.json(); if(d.results?.length) return {lat:+d.results[0].latitude,lon:+d.results[0].longitude}; }
+      }catch(e){}
+      return null;
+    }
+    async function getRouteMeters(s,d){
+      try{
+        const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${s.lon},${s.lat};${d.lon},${d.lat}?overview=false&steps=false`);
+        if(r.ok){ const j=await r.json(); if(j.routes?.length) return j.routes[0].distance; }
+      }catch(e){}
+      const R=6371000,toRad=x=>x*Math.PI/180;
+      const dLat=toRad(d.lat-s.lat), dLon=toRad(d.lon-s.lon);
+      const a=Math.sin(dLat/2)**2+Math.cos(toRad(s.lat))*Math.cos(toRad(d.lat))*Math.sin(dLon/2)**2;
+      const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+      return R*c*1.3;
+    }
+    function openNavigator(s,d){
+      const url=`https://www.google.com/maps/dir/?api=1&origin=${s.lat},${s.lon}&destination=${d.lat},${d.lon}&travelmode=driving`;
+      if(/Android/i.test(navigator.userAgent)) window.location.href=url; else window.open(url,'_blank');
+    }
+  }
+})();
+</script>
+
+<!-- Admin & toggles -->
+<script>
+const ADMIN_PASS='19041988'; window.isAdmin=false;
+const adminBtn=document.getElementById('adminBtn');
+adminBtn.onclick=()=>{
+  if(!window.isAdmin){
+    const p=prompt(LANG==='it'?'Password:':LANG==='en'?'Password:':'Пароль:');
+    if(p===ADMIN_PASS){ window.isAdmin=true; adminBtn.textContent='🔓 Admin ON'; }
+    else alert('❌');
+  }else{
+    window.isAdmin=false; adminBtn.textContent=t('btn.admin');
+  }
+  window.dispatchEvent(new Event('admin-changed'));
+};
+document.getElementById('toggleSaved').onclick=()=>{
+  const el=document.getElementById('placesSaved'); el.style.display = (el.style.display==='none'?'block':'none');
+};
+document.getElementById('toggleAdd').onclick=()=>{
+  const el=document.getElementById('placesAdd'); el.style.display = (el.style.display==='none'?'block':'none');
+};
+</script>
+
+<!-- SHIFT logic -->
+<script>
+const countdownEl = document.getElementById('countdown');
+const resetBtn = document.getElementById('resetBtn');
+const shiftInfo = document.getElementById('shiftInfo');
+document.getElementById('shift13').onclick = ()=> startShift(13);
+document.getElementById('shift15').onclick = ()=> startShift(15);
+
+let tickTimer = null;
+
+function loadShift(){ try{ return JSON.parse(localStorage.getItem('shiftState')||'{}'); }catch{ return {}; } }
+function saveShift(state){ localStorage.setItem('shiftState', JSON.stringify(state||{})); }
+
+function startShift(hours){
+  const state = { startTs: Date.now(), durSec: hours*3600 };
+  saveShift(state); updateUI(state); startTick(state);
+}
+function resetShift(){ stopTick(); saveShift({}); updateUI({}); }
+resetBtn.onclick = ()=>{ if(confirm(LANG==='it'?'Reset turno?':LANG==='en'?'Reset shift?':'Скинути зміну?')) resetShift(); };
+
+function getRemaining(state){
+  if(!state?.startTs || !state?.durSec) return null;
+  const elapsed = Math.floor((Date.now() - state.startTs)/1000);
+  return state.durSec - elapsed;
+}
+function fmtHMS(s){ const v=Math.max(0,s|0); const h=Math.floor(v/3600), m=Math.floor((v%3600)/60), ss=v%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0'); }
+
+function updateUI(state){
+  const rem=getRemaining(state);
+  if(rem==null){ countdownEl.textContent='—:—:—'; shiftInfo.textContent='—'; return; }
+  countdownEl.textContent=fmtHMS(rem);
+  const endTs=state.startTs+state.durSec*1000;
+  const labelLeft=(LANG==='it'?'Rimasti':LANG==='en'?'Left':'Залишилось');
+  const labelEnd =(LANG==='it'?'Fine alle':LANG==='en'?'Ends at':'Кінець о');
+  shiftInfo.textContent=`${labelLeft}: ${fmtHMS(rem)} | ${labelEnd}: ${new Date(endTs).toLocaleTimeString()}`;
+}
+window.updateUI = updateUI; // щоб applyLang міг освіжити
+
+function startTick(){
+  stopTick();
+  (function tick(){
+    const current=loadShift(); const rem=getRemaining(current);
+    if(rem==null){ stopTick(); updateUI({}); return; }
+    if(rem<=0){
+      countdownEl.textContent='00:00:00';
+      shiftInfo.textContent=(LANG==='it'?'Turno terminato!':LANG==='en'?'Shift finished!':'Зміна завершена!');
+      stopTick(); try{ new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABYAAAAAAACAAAAA').play(); }catch(e){}
+      alert(LANG==='it'?'Turno terminato!':LANG==='en'?'Shift finished!':'Зміна завершена!'); return;
+    }
+    updateUI(current); tickTimer=setTimeout(tick,1000);
+  })();
+}
+function stopTick(){ if(tickTimer){ clearTimeout(tickTimer); tickTimer=null; } }
+
+(function boot(){ const st=loadShift(); if(st?.startTs&&st?.durSec){ updateUI(st); startTick(st); } else updateUI({}); })();
+document.addEventListener('visibilitychange', ()=>{ const st=loadShift(); if(st?.startTs&&st?.durSec){ updateUI(st); if(!tickTimer) startTick(st); }});
+</script>
+
+<!-- Firebase: chat + places -->
+<script type="module">
+import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove, set, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCS7Ny5QmUC9Lor-VkA2czyi9Rw93pZEw",
+  authDomain: "programmapro-f3f61.firebaseapp.com",
+  databaseURL: "https://programmapro-f3f61-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "programmapro-f3f61",
+  storageBucket: "programmapro-f3f61.firebasestorage.app",
+  messagingSenderId: "468067420871",
+  appId: "1:468067420871:web:7e06da16ec6f55d79c71e2"
+};
+
+let app; try{ app=getApp(); }catch{ app=initializeApp(firebaseConfig); }
+const db  = getDatabase(app);
+
+/* CHAT */
+const chatWindow = document.getElementById("chatWindow");
+const chatMsgEl  = document.getElementById("chatMsg");
+const chatSend   = document.getElementById("chatSend");
+const chatClear  = document.getElementById("chatClear");
+const chatRef    = ref(db, "chat");
+
+let USER = localStorage.getItem("chatUser");
+if(!USER){
+  USER = (prompt(LANG==='it'?'Inserisci il tuo nome:':LANG==='en'?'Enter your name:':"Введіть ваше ім'я (видно в чаті):") || "Anon").trim() || "Anon";
+  localStorage.setItem("chatUser", USER);
+}
+chatMsgEl.placeholder = (LANG==='it'?`Scrivi come ${USER}…`:LANG==='en'?`Type as ${USER}…`:`Написати як ${USER}…`);
+
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmt = ts => new Date(ts).toLocaleString();
+
+function renderChat(arr){
+  chatWindow.innerHTML = "";
+  arr.forEach(m=>{
+    const d=document.createElement('div');
+    d.className='chat-msg';
+    d.innerHTML=`<div><b>${esc(m.user||'Anon')}</b></div>
+                 <div style="white-space:pre-wrap">${esc(m.msg||'')}</div>
+                 <div class="chat-meta">${fmt(m.time||Date.now())}</div>`;
+    chatWindow.appendChild(d);
+  });
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+onValue(chatRef, snap=>{
+  const data = snap.val() || {};
+  const arr = Object.values(data).sort((a,b)=>(a.time||0)-(b.time||0)).slice(-100);
+  renderChat(arr.slice(-50));
+});
+function sendChat(){
+  const msg = chatMsgEl.value.trim();
+  if(!msg) return;
+  push(chatRef, { user: USER, msg, time: Date.now() })
+    .then(()=> chatMsgEl.value='')
+    .catch(console.error);
+}
+chatSend.onclick = sendChat;
+chatMsgEl.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+function updateChatAdminUI(){ chatClear.style.display = (window.isAdmin===true)?'inline-block':'none'; }
+updateChatAdminUI();
+window.addEventListener('admin-changed', updateChatAdminUI);
+chatClear.onclick = async ()=>{ if(window.isAdmin!==true) return; if(confirm(LANG==='it'?'Eliminare tutti i messaggi?':LANG==='en'?'Delete all messages?':'Очистити всі повідомлення?')) await set(chatRef, null); };
+
+/* PLACES (shared) */
+const pList = document.getElementById('pList');
+const pLoc  = document.getElementById('pLoc');
+const pName = document.getElementById('pName');
+const pAdd  = document.getElementById('pAdd');
+const pUseMe= document.getElementById('pUseMe');
+const placesRef = ref(db, 'places');
+
+function renderPlaces(obj){
+  pList.innerHTML = '';
+  const entries = Object.entries(obj||{});
+  if(!entries.length){ pList.innerHTML = '<div style="color:var(--muted)">—</div>'; return; }
+  entries
+    .sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0))
+    .forEach(([key,val])=>{
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML = `
+        <div style="flex:1">
+          <div style="font-weight:900">${esc(val.name||'—')}</div>
+          <div style="color:var(--muted)">${esc(val.loc||'')}</div>
+        </div>
+        <button class="btn btn-blue go" data-key="${key}">${LANG==='it'?'Navigatore':LANG==='en'?'Navigator':'Навігатор'}</button>
+        ${window.isAdmin?`<button class="btn btn-red del" data-key="${key}">✖</button>`:''}
+      `;
+      pList.appendChild(row);
+    });
+  pList.querySelectorAll('.go').forEach(btn=>{
+    btn.onclick = ()=> { const k=btn.dataset.key; const val=obj[k]; openPlace(val.loc); };
+  });
+  if(window.isAdmin){
+    pList.querySelectorAll('.del').forEach(btn=>{
+      btn.onclick = async ()=>{ 
+        if(confirm(LANG==='it'?'Eliminare?':LANG==='en'?'Delete?':'Видалити місце?')) 
+          await remove(child(placesRef,btn.dataset.key)); 
+      };
+    });
+  }
+}
+let lastPlacesData={};
+onValue(placesRef, snap=>{ lastPlacesData = snap.val() || {}; renderPlaces(lastPlacesData); });
+window.addEventListener('admin-changed', ()=>renderPlaces(lastPlacesData));
+
+pAdd.onclick = async ()=>{
+  const name=(pName.value||'').trim(), loc=(pLoc.value||'').trim();
+  if(!name || !loc){ alert(LANG==='it'?'Compila nome e indirizzo/coordinate':LANG==='en'?'Fill name and address/coordinates':'Заповни назву і адресу/координати'); return; }
+  await push(placesRef, { name, loc, createdBy: USER, createdAt: Date.now() });
+  pName.value=''; pLoc.value='';
+  document.getElementById('placesSaved').style.display='block';
+};
+pUseMe.onclick = ()=> navigator.geolocation.getCurrentPosition(p=>{
+  pLoc.value = `${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`;
+},()=>alert(LANG==='it'?'GPS non disponibile':LANG==='en'?'GPS unavailable':'GPS недоступний'),{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+</script>
+
+<!-- === WEATHER FIX + LOADER === -->
+<script>
+function updateWeatherUI(){
+  try {
+    const city = (window.lastWeather?.city) || (LANG==='it'?'Meteo':LANG==='en'?'Weather':'Погода');
+    const temp = (window.lastWeather?.temp) ?? '—';
+    const wind = (window.lastWeather?.wind) ?? '—';
+    const windWord = t('weather.wind') || (LANG==='it'?'Vento':LANG==='en'?'Wind':'Вітер');
+    const wCity = document.getElementById('wCity');
+    const wInfo = document.getElementById('wInfo');
+    if (wCity) wCity.textContent = city;
+    if (wInfo) wInfo.textContent = `☀️ ${temp}°C · ${windWord} ${wind} km/h`;
+  } catch(e){ console.error('updateWeatherUI error:', e); }
+}
+window.updateWeatherUI = updateWeatherUI;
+
+window.lastWeather = {city:'—', temp:'—', wind:'—'};
+(async function loadWeather(){
+  try{
+    const pos=await new Promise(res=>{
+      if(!navigator.geolocation) return res({coords:{latitude:41.9028,longitude:12.4964}});
+      navigator.geolocation.getCurrentPosition(res, ()=>res({coords:{latitude:41.9028,longitude:12.4964}}), {timeout:8000});
+    });
+    const {latitude:lat,longitude:lon}=pos.coords;
+    const [W,C]=await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`).then(r=>r.json()),
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`).then(r=>r.json()).catch(()=>({address:{}}))
+    ]);
+    window.lastWeather.city = C.address?.city || C.address?.town || C.address?.village || (LANG==='it'?'Meteo':LANG==='en'?'Weather':'Погода');
+    window.lastWeather.temp = Math.round(W.current_weather?.temperature ?? 0);
+    window.lastWeather.wind = Math.round(W.current_weather?.windspeed ?? 0);
+  }catch(e){ console.warn('weather fetch failed', e); }
+  if(typeof window.updateWeatherUI==='function') window.updateWeatherUI();
+})();
+</script>
+<!-- === END WEATHER FIX + LOADER === -->
+
+<!-- Пасхалка -->
+<script>
+let clickCount = 0, clickTimer;
+const logo = document.querySelector('.flag');
+logo.addEventListener('click', () => {
+  clickCount++; clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => clickCount = 0, 1000);
+  if (clickCount >= 5) {
+    clickCount = 0;
+    const div = document.createElement('div');
+    div.textContent = 'Bondar Denys — LEGEND MODE ON 🚛💥';
+    div.style.position='fixed'; div.style.inset='0'; div.style.display='flex';
+    div.style.justifyContent='center'; div.style.alignItems='center';
+    div.style.fontSize='2rem'; div.style.fontWeight='1000'; div.style.color='#00ff7f';
+    div.style.textShadow='0 0 20px #00ff7f'; div.style.zIndex='99999';
+    div.style.animation='fadeOutLegend 3s forwards'; document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+  }
+});
+const style = document.createElement('style');
+style.textContent='@keyframes fadeOutLegend{0%{opacity:0;transform:scale(.7) rotate(-5deg)}10%{opacity:1;transform:scale(1.05) rotate(2deg)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.2) rotate(5deg)}}';
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>

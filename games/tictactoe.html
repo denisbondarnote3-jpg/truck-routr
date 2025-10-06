@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="uk"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Хрестики-Нолики</title>
+<style>
+:root{--bg:#000;--panel:#0a0a0a;--text:#eaf0f6}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+.topbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--panel);border-bottom:1px solid #1a1a1a}
+.topbar button{padding:8px 12px;border-radius:10px;border:1px solid #222;background:#121212;color:#fff;cursor:pointer}
+.board{display:grid;grid-template-columns:repeat(3,100px);gap:6px;justify-content:center;padding:24px}
+.cell{width:100px;height:100px;display:grid;place-items:center;font-size:48px;background:#111;border:1px solid #222;cursor:pointer;border-radius:8px}
+.info{text-align:center;margin-top:6px}
+</style>
+</head><body>
+<div class="topbar">
+  <strong>Хрестики-Нолики</strong>
+  <button onclick="tryClose()">✕ Закрити</button>
+</div>
+
+<div class="board" id="board"></div>
+<div class="info" id="info">Твій хід: X</div>
+
+<script>
+function tryClose(){ window.close(); }
+
+const board = document.getElementById('board');
+const info = document.getElementById('info');
+let cells = Array(9).fill(''), human='X', ai='O';
+
+for(let i=0;i<9;i++){
+  const d = document.createElement('div');
+  d.className='cell'; d.onclick = ()=> move(i);
+  board.appendChild(d);
+}
+function move(i){
+  if(cells[i]||winner(cells)) return;
+  cells[i]=human; render();
+  if(winner(cells)||full(cells)) return end();
+  const j = bestMove();
+  cells[j]=ai; render();
+  if(winner(cells)||full(cells)) return end();
+}
+function render(){
+  [...board.children].forEach((c,idx)=>c.textContent=cells[idx]);
+  const x=cells.filter(v=>v==='X').length, o=cells.filter(v=>v==='O').length;
+  info.textContent = 'Твій хід: ' + (x===o?'X':'O');
+}
+function full(a){ return a.every(v=>v); }
+function winner(a){
+  for(const [x,y,z] of [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]){
+    if(a[x] && a[x]===a[y] && a[y]===a[z]) return a[x];
+  } return null;
+}
+function bestMove(){
+  const empty = cells.map((v,i)=>v?null:i).filter(v=>v!==null);
+  for(const i of empty){ const a=cells.slice(); a[i]='O'; if(winner(a)==='O') return i; }
+  for(const i of empty){ const a=cells.slice(); a[i]='X'; if(winner(a)==='X') return i; }
+  if(empty.includes(4)) return 4;
+  for(const k of [0,2,6,8]) if(empty.includes(k)) return k;
+  return empty[0];
+}
+function end(){
+  const w = winner(cells);
+  setTimeout(()=>{
+    alert(w?('Переможець: '+w):'Нічия!');
+    cells = Array(9).fill('');
+    render();
+  }, 50);
+}
+render();
+</script>
+</body></html>

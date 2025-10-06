@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="uk"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Змійка</title>
+<style>
+:root{--bg:#000;--panel:#0a0a0a;--text:#eaf0f6;--accent:#2dd4bf}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+.topbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--panel);border-bottom:1px solid #1a1a1a}
+.topbar button{padding:8px 12px;border-radius:10px;border:1px solid #222;background:#121212;color:#fff;cursor:pointer}
+.wrap{display:grid;place-items:center;min-height:calc(100dvh - 56px);padding:16px}
+canvas{background:#111;border:1px solid #222}
+.info{margin-top:10px}
+</style>
+</head><body>
+<div class="topbar">
+  <strong>Змійка</strong>
+  <button onclick="tryClose()">✕ Закрити</button>
+</div>
+<div class="wrap">
+  <canvas id="c" width="320" height="320"></canvas>
+  <div class="info">Стрілки: ↑ ↓ ← →</div>
+</div>
+
+<script>
+function tryClose(){ window.close(); }
+
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const size = 16; const cells = cv.width/size;
+let snake = [{x:8,y:8}], dir = {x:1,y:0}, food = spawnFood(), alive = true, tick=0, score=0;
+
+function spawnFood(){
+  while(true){
+    const f = {x:Math.floor(Math.random()*cells), y:Math.floor(Math.random()*cells)};
+    if(!snake.some(s=>s.x===f.x && s.y===f.y)) return f;
+  }
+}
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'   && dir.y!== 1) dir={x:0,y:-1};
+  if(e.key==='ArrowDown' && dir.y!==-1) dir={x:0,y: 1};
+  if(e.key==='ArrowLeft' && dir.x!== 1) dir={x:-1,y:0};
+  if(e.key==='ArrowRight'&& dir.x!==-1) dir={x: 1,y:0};
+});
+function loop(){
+  if(!alive) return;
+  requestAnimationFrame(loop);
+  if(++tick%6) return;
+  const head = {x:(snake[0].x+dir.x+cells)%cells, y:(snake[0].y+dir.y+cells)%cells};
+  if(snake.some(s=>s.x===head.x && s.y===head.y)){ alive=false; alert('Гру закінчено! Рахунок: '+score); return; }
+  snake.unshift(head);
+  if(head.x===food.x && head.y===food.y){ score++; food=spawnFood(); }
+  else snake.pop();
+
+  ctx.fillStyle='#111'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#ff5c5c'; ctx.fillRect(food.x*size, food.y*size, size, size);
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#2dd4bf';
+  snake.forEach(s=>ctx.fillRect(s.x*size, s.y*size, size-1, size-1));
+}
+loop();
+</script>
+</body></html>

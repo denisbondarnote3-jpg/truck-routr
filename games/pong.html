@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pong</title>
+<style>
+  :root{--bg:#000;--line:#1e293b;--text:#e2e8f0;--accent:#22d3ee;--win:#10b981}
+  *{box-sizing:border-box} html,body{height:100%;margin:0;background:#000;color:var(--text);font-family:system-ui,Segoe UI,Roboto,Inter,Arial}
+  .wrap{max-width:960px;margin:0 auto;padding:12px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .btn{padding:8px 12px;border:1px solid #334155;border-radius:10px;background:#0b1220;color:#fff;font-weight:700;cursor:pointer}
+  .btn:active{transform:scale(.98)}
+  .score{font-weight:900;letter-spacing:1px}
+  canvas{width:100%;height:auto;background:#020617;border:1px solid #1f2937;border-radius:12px;display:block}
+  .help{opacity:.8;font-size:14px;margin-top:8px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="score">🅰️ <span id="sL">0</span> : <span id="sR">0</span> 🅱️</div>
+      <div>
+        <button id="btnPause" class="btn">⏸ Пауза</button>
+        <button id="btnReset" class="btn">♻️ Скинути</button>
+      </div>
+    </div>
+    <canvas id="game" width="960" height="540"></canvas>
+    <div class="help">Керування: мишкою / тачем • або клавіші W/S (⬆︎/⬇︎). Перший до 7 — переміг.</div>
+  </div>
+
+<script>
+const cvs = document.getElementById('game');
+const ctx = cvs.getContext('2d',{alpha:false});
+
+const W = cvs.width, H = cvs.height;
+const mid = H/2;
+
+// об’єкти
+const PADDLE_H = 90, PADDLE_W = 14, MARGIN = 20;
+const left = { x:MARGIN, y:mid-PADDLE_H/2, w:PADDLE_W, h:PADDLE_H, vy:0 };
+const right= { x:W-MARGIN-PADDLE_W, y:mid-PADDLE_H/2, w:PADDLE_W, h:PADDLE_H, vy:0 };
+
+const ball0=()=>({ x:W/2, y:H/2, r:8, vx:(Math.random()<.5?-1:1)*(4+Math.random()*2), vy:(Math.random()-.5)*6 });
+let ball = ball0();
+
+let sL=0,sR=0, paused=false, raf;
+
+const sLel=document.getElementById('sL'), sRel=document.getElementById('sR');
+const btnPause=document.getElementById('btnPause'), btnReset=document.getElementById('btnReset');
+
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+function drawCourt(){
+  ctx.fillStyle="#000";
+  ctx.fillRect(0,0,W,H);
+  // сітка
+  ctx.strokeStyle="rgba(148,163,184,.15)";
+  ctx.lineWidth=1;
+  for(let y=0;y<H;y+=24){
+    ctx.beginPath(); ctx.moveTo(W/2,y); ctx.lineTo(W/2,y+12); ctx.stroke();
+  }
+}
+
+function drawPaddle(p){
+  ctx.fillStyle="#94a3b8";
+  ctx.fillRect(p.x,p.y,p.w,p.h);
+}
+
+function drawBall(){
+  ctx.fillStyle="#22d3ee";
+  ctx.beginPath(); ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fill();
+}
+
+function serve(side){
+  ball = ball0();
+  ball.vx = (side==='L'?1:-1) * (4+Math.random()*2);
+  ball.x += (side==='L'?50:-50);
+}
+
+function update(){
+  // рух ракеток (клавіатура)
+  left.y += left.vy;
+  right.y += right.vy;
+  left.y = clamp(left.y, 0, H-left.h);
+  right.y= clamp(right.y,0,H-right.h);
+
+  // AI для правої (легка допомога гравцю)
+  const target = ball.y - right.h/2;
+  right.y += clamp(target-right.y, -5, 5);
+
+  // м’яч
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  // відскоки зверху/знизу
+  if(ball.y - ball.r < 0){ ball.y = ball.r; ball.vy *= -1; }
+  if(ball.y + ball.r > H){ ball.y = H - ball.r; ball.vy *= -1; }
+
+  // колізії з ракетками
+  const hitL = ball.x-ball.r <= left.x+left.w && ball.y>=left.y && ball.y<=left.y+left.h;
+  const hitR = ball.x+ball.r >= right.x && ball.y>=right.y && ball.y<=right.y+right.h;
+
+  if(hitL){
+    ball.x = left.x+left.w+ball.r;
+    const rel = (ball.y - (left.y+left.h/2)) / (left.h/2);
+    ball.vx = Math.abs(ball.vx) + 0.2;
+    ball.vx *= 1;
+    ball.vy = rel*6;
+  }
+  if(hitR){
+    ball.x = right.x - ball.r;
+    const rel = (ball.y - (right.y+right.h/2)) / (right.h/2);
+    ball.vx = -Math.abs(ball.vx) - 0.2;
+    ball.vy = rel*6;
+  }
+
+  // гол
+  if(ball.x < -30){ sR++; sRel.textContent=sR; serve('R'); }
+  if(ball.x > W+30){ sL++; sLel.textContent=sL; serve('L'); }
+
+  // переможець
+  if(sL>=7 || sR>=7){
+    paused = true;
+    ctx.fillStyle = (sL>sR?'#10b981':'#ef4444');
+    ctx.font = "bold 48px system-ui,Segoe UI,Roboto,Inter,Arial";
+    ctx.textAlign="center";
+    ctx.fillText((sL>sR?'Лівий гравець переміг!':'Правий гравець переміг!'), W/2, H/2);
+    cancelAnimationFrame(raf);
+    return;
+  }
+}
+
+function render(){
+  drawCourt();
+  drawPaddle(left); drawPaddle(right);
+  drawBall();
+}
+
+function loop(){
+  if(!paused){ update(); render(); }
+  raf = requestAnimationFrame(loop);
+}
+
+// керування мишкою/тачем
+function toCanvasY(clientY){
+  const r = cvs.getBoundingClientRect();
+  const y = (clientY - r.top) * (cvs.height / r.height);
+  return clamp(y - left.h/2, 0, H-left.h);
+}
+cvs.addEventListener('mousemove', e=>{ left.y = toCanvasY(e.clientY); });
+cvs.addEventListener('touchmove', e=>{ left.y = toCanvasY(e.touches[0].clientY); e.preventDefault(); }, {passive:false});
+
+// клавіатура
+window.addEventListener('keydown', e=>{
+  if(e.key==='w' || e.key==='ArrowUp') left.vy = -7;
+  if(e.key==='s' || e.key==='ArrowDown') left.vy = 7;
+  if(e.code==='Space') togglePause();
+});
+window.addEventListener('keyup', e=>{
+  if(['w','ArrowUp','s','ArrowDown'].includes(e.key)) left.vy = 0;
+});
+
+// кнопки
+function togglePause(){
+  paused = !paused;
+  btnPause.textContent = paused?'▶️ Продовжити':'⏸ Пауза';
+}
+btnPause.onclick = togglePause;
+btnReset.onclick = ()=>{
+  sL=sR=0; sLel.textContent='0'; sRel.textContent='0';
+  left.y=right.y=mid-PADDLE_H/2; left.vy=right.vy=0;
+  paused=false; btnPause.textContent='⏸ Пауза';
+  serve(Math.random()<.5?'L':'R');
+};
+
+serve(Math.random()<.5?'L':'R');
+loop();
+</script>
+</body>
+</html>

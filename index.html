@@ -78,6 +78,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
 .btn-green{ background:var(--green); color:#fff; border-color:#126b2f;}
 .btn-green:active{background:var(--green2)}
 .btn-red  { background:var(--danger); color:#fff; border-color:#b91c1c;}
+.small{padding:6px 10px;font-size:14px}
 
 /* Chat */
 .chat-list{background:#fff;color:#111;border:1px solid #ccc;border-radius:12px;
@@ -89,7 +90,6 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
 .shift-grid{display:grid;grid-template-columns:1fr;gap:10px}
 .countdown{font-size:42px;font-weight:900;text-align:center;padding:10px 0;border:1px dashed var(--border);border-radius:12px;background:#0b0b0b}
 .shift-buttons{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.small{padding:6px 10px;font-size:14px}
 
 /* Footer */
 footer{text-align:center;padding:20px;color:var(--danger);font-weight:700;border-top:2px solid var(--accent)}
@@ -125,8 +125,27 @@ footer{text-align:center;padding:20px;color:var(--danger);font-weight:700;border
   <button id="toggleSaved" class="btn" data-i="btn.places">📋 Місця</button>
   <button id="toggleAdd" class="btn" data-i="btn.addPlace">➕ Нове місце</button>
   <button id="adminBtn" class="btn" data-i="btn.admin">🔐 Адмін</button>
-<a class="btn" href="games/pong.html" target="_blank" rel="noopener">🏓 Pong</a>
+  <a class="btn" href="games/pong.html" target="_blank" rel="noopener">🏓 Pong</a>
   <a class="btn" href="games/tictactoe.html" target="_blank" rel="noopener" data-i="btn.ttt">❌⭕ Хрестики</a>
+</div>
+
+<!-- === Admin Dashboard === -->
+<div id="adminPanel" class="section" style="display:none;background:var(--panel2)">
+  <h3>🛠️ Admin Dashboard</h3>
+  <div class="row" style="justify-content:space-between">
+    <div>👥 Унікальних сьогодні: <strong id="v-unique-today">—</strong></div>
+    <div>👤 Усього зареєстровано: <strong id="v-unique-all">—</strong></div>
+    <div id="v-last-update" class="chat-meta">—</div>
+  </div>
+  <div class="row" style="margin-top:8px;gap:8px">
+    <button class="btn btn-blue" id="v-refresh">Оновити</button>
+    <button class="btn btn-red"  id="v-clear-today">Очистити “сьогодні”</button>
+    <button class="btn btn-red"  id="v-clear-all">Очистити ВСІ відвідувачі</button>
+  </div>
+  <div style="margin-top:12px">
+    <div class="chat-meta">Список (останні зверху; 🟢 — відвідував сьогодні)</div>
+    <div id="v-list" class="list" style="max-height:260px;overflow:auto"></div>
+  </div>
 </div>
 
 <!-- Places (shared) -->
@@ -265,9 +284,7 @@ function applyLang(){
   if(pLoc)  pLoc.placeholder  = (LANG==='it'?'Via Napoli o 40.96,14.19':LANG==='en'?'Via Napoli or 40.96,14.19':'Via Napoli або 40.96,14.19');
   if(pName) pName.placeholder = (LANG==='it'?'Parcheggio vicino ai campi':LANG==='en'?'Parking near fields':'Парковка біля поля');
   if(addr)  addr.placeholder  = (LANG==='it'?'Via Roma 10, Napoli':LANG==='en'?'Via Roma 10, Naples':'Via Roma 10, Napoli');
-  const b1=document.querySelector('[data-i="btn.snake"]'); const b2=document.querySelector('[data-i="btn.ttt"]');
-  if(b1) b1.textContent=t('btn.snake'); if(b2) b2.textContent=t('btn.ttt');
-  // безпечні виклики
+  const b2=document.querySelector('[data-i="btn.ttt"]'); if(b2) b2.textContent=t('btn.ttt');
   if(typeof window.updateWeatherUI==='function') window.updateWeatherUI();
   if(typeof window.updateUI==='function' && typeof loadShift==='function') window.updateUI(loadShift()||{});
 }
@@ -282,25 +299,6 @@ function openPlace(q){
   if(/Android/i.test(navigator.userAgent)) window.location.href=url; else window.open(url,'_blank');
 }
 </script>
-
-  if(/Android/i.test(navigator.userAgent)) window.location.href=url; else window.open(url,'_blank');
-}
-</script>
-
-<!-- === Site Visits Counter === -->
-<script>
-(function(){
-  const siteKey='programmapro-site';
-  // +1 до загального та до "сьогодні" при кожному відкритті сторінки
-  fetch(`https://api.countapi.xyz/hit/${siteKey}/total`).catch(()=>{});
-  const today=new Date().toISOString().slice(0,10);
-  fetch(`https://api.countapi.xyz/hit/${siteKey}/${today}`).catch(()=>{});
-})();
-</script>
-
-<!-- ===== Route module (ізоляція, без конфліктів) ===== -->
-<script>
-(function(){
 
 <!-- ===== Route module (ізоляція, без конфліктів) ===== -->
 <script>
@@ -466,7 +464,7 @@ function updateUI(state){
   const labelEnd =(LANG==='it'?'Fine alle':LANG==='en'?'Ends at':'Кінець о');
   shiftInfo.textContent=`${labelLeft}: ${fmtHMS(rem)} | ${labelEnd}: ${new Date(endTs).toLocaleTimeString()}`;
 }
-window.updateUI = updateUI; // щоб applyLang міг освіжити
+window.updateUI = updateUI;
 
 function startTick(){
   stopTick();
@@ -488,10 +486,10 @@ function stopTick(){ if(tickTimer){ clearTimeout(tickTimer); tickTimer=null; } }
 document.addEventListener('visibilitychange', ()=>{ const st=loadShift(); if(st?.startTs&&st?.durSec){ updateUI(st); if(!tickTimer) startTick(st); }});
 </script>
 
-<!-- Firebase: chat + places -->
+<!-- Firebase: chat + places + visitors + admin -->
 <script type="module">
 import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, set, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, set, child, update, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCS7Ny5QmUC9Lor-VkA2czyi9Rw93pZEw",
@@ -506,7 +504,42 @@ const firebaseConfig = {
 let app; try{ app=getApp(); }catch{ app=initializeApp(firebaseConfig); }
 const db  = getDatabase(app);
 
-/* CHAT */
+/* -------- Visitors tracking (name + unique/day) -------- */
+(function(){
+  const uidKey='programmapro_visitorId';
+  const nameKey='chatUser'; // одне ім'я і для чату, і для відвідувачів
+  let visitorId = localStorage.getItem(uidKey);
+  let name = localStorage.getItem(nameKey);
+
+  if(!name){
+    name = (prompt(
+      (window.LANG==='it'?'Inserisci il tuo nome:':window.LANG==='en'?'Enter your name:':'Введіть ваше імʼя (видно адміну):')
+    ) || 'Anon').trim() || 'Anon';
+    localStorage.setItem(nameKey, name);
+  }
+
+  const ua = navigator.userAgent || 'unknown';
+  const genId = ()=> 'v_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9);
+  const today = ()=> new Date().toISOString().slice(0,10);
+
+  async function write(){
+    try{
+      if(!visitorId){
+        visitorId = genId();
+        localStorage.setItem(uidKey, visitorId);
+        await set(ref(db, `visitors/${visitorId}`), {
+          id: visitorId, name, ua, firstSeen: Date.now(), lastSeen: Date.now()
+        });
+      }else{
+        await update(ref(db, `visitors/${visitorId}`), { name, ua, lastSeen: Date.now() });
+      }
+      await set(ref(db, `visits_by_day/${today()}/${visitorId}`), true);
+    }catch(e){ console.warn('visitor error', e); }
+  }
+  write();
+})();
+
+/* -------------------- CHAT -------------------- */
 const chatWindow = document.getElementById("chatWindow");
 const chatMsgEl  = document.getElementById("chatMsg");
 const chatSend   = document.getElementById("chatSend");
@@ -515,31 +548,46 @@ const chatRef    = ref(db, "chat");
 
 let USER = localStorage.getItem("chatUser");
 if(!USER){
-  USER = (prompt(LANG==='it'?'Inserisci il tuo nome:':LANG==='en'?'Enter your name:':"Введіть ваше ім'я (видно в чаті):") || "Anon").trim() || "Anon";
+  USER = (prompt(window.LANG==='it'?'Inserisci il tuo nome:':window.LANG==='en'?'Enter your name:':"Введіть ваше ім'я (видно в чаті):") || "Anon").trim() || "Anon";
   localStorage.setItem("chatUser", USER);
 }
-chatMsgEl.placeholder = (LANG==='it'?`Scrivi come ${USER}…`:LANG==='en'?`Type as ${USER}…`:`Написати як ${USER}…`);
+chatMsgEl.placeholder = (window.LANG==='it'?`Scrivi come ${USER}…`:window.LANG==='en'?`Type as ${USER}…`:`Написати як ${USER}…`);
 
 const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmt = ts => new Date(ts).toLocaleString();
 
-function renderChat(arr){
+function renderChatWithKeys(obj){
   chatWindow.innerHTML = "";
-  arr.forEach(m=>{
-    const d=document.createElement('div');
+  const entries = Object.entries(obj || {}).sort((a,b)=>(a[1].time||0)-(b[1].time||0)).slice(-100);
+  entries.forEach(([key, m])=>{
+    const d = document.createElement('div');
     d.className='chat-msg';
-    d.innerHTML=`<div><b>${esc(m.user||'Anon')}</b></div>
-                 <div style="white-space:pre-wrap">${esc(m.msg||'')}</div>
-                 <div class="chat-meta">${fmt(m.time||Date.now())}</div>`;
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><b>${esc(m.user||'Anon')}</b></div>
+        ${window.isAdmin ? `<button class="btn btn-red small" data-del="${key}">✖</button>` : ``}
+      </div>
+      <div style="white-space:pre-wrap">${esc(m.msg||'')}</div>
+      <div class="chat-meta">${fmt(m.time||Date.now())}</div>`;
     chatWindow.appendChild(d);
   });
   chatWindow.scrollTop = chatWindow.scrollHeight;
+
+  if(window.isAdmin){
+    chatWindow.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const id = btn.getAttribute('data-del');
+        if(!confirm('Видалити повідомлення?')) return;
+        await remove(child(chatRef, id));
+      };
+    });
+  }
 }
+
 onValue(chatRef, snap=>{
-  const data = snap.val() || {};
-  const arr = Object.values(data).sort((a,b)=>(a.time||0)-(b.time||0)).slice(-100);
-  renderChat(arr.slice(-50));
+  renderChatWithKeys(snap.val() || {});
 });
+
 function sendChat(){
   const msg = chatMsgEl.value.trim();
   if(!msg) return;
@@ -552,10 +600,14 @@ chatMsgEl.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
 
 function updateChatAdminUI(){ chatClear.style.display = (window.isAdmin===true)?'inline-block':'none'; }
 updateChatAdminUI();
-window.addEventListener('admin-changed', updateChatAdminUI);
-chatClear.onclick = async ()=>{ if(window.isAdmin!==true) return; if(confirm(LANG==='it'?'Eliminare tutti i messaggi?':LANG==='en'?'Delete all messages?':'Очистити всі повідомлення?')) await set(chatRef, null); };
+window.addEventListener('admin-changed', ()=>{
+  updateChatAdminUI();
+  // перемальовуємо чат, щоб з'явилися кнопки ✖
+  get(chatRef).then(s=> renderChatWithKeys(s.val()||{}));
+});
+chatClear.onclick = async ()=>{ if(window.isAdmin!==true) return; if(confirm(window.LANG==='it'?'Eliminare tutti i messaggi?':window.LANG==='en'?'Delete all messages?':'Очистити всі повідомлення?')) await set(chatRef, null); };
 
-/* PLACES (shared) */
+/* -------------------- PLACES (shared) -------------------- */
 const pList = document.getElementById('pList');
 const pLoc  = document.getElementById('pLoc');
 const pName = document.getElementById('pName');
@@ -567,28 +619,65 @@ function renderPlaces(obj){
   pList.innerHTML = '';
   const entries = Object.entries(obj||{});
   if(!entries.length){ pList.innerHTML = '<div style="color:var(--muted)">—</div>'; return; }
-  entries
-    .sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0))
+
+  entries.sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0))
     .forEach(([key,val])=>{
-      const row=document.createElement('div'); row.className='item';
+      const row=document.createElement('div'); 
+      row.className='item';
       row.innerHTML = `
         <div style="flex:1">
-          <div style="font-weight:900">${esc(val.name||'—')}</div>
-          <div style="color:var(--muted)">${esc(val.loc||'')}</div>
+          <div style="font-weight:900">
+            <span class="p-name">${esc(val.name||'—')}</span>
+            ${window.isAdmin ? `<input class="p-name-edit" value="${esc(val.name||'—')}" style="display:none;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text)">`:``}
+          </div>
+          <div style="color:var(--muted)">
+            <span class="p-loc">${esc(val.loc||'')}</span>
+            ${window.isAdmin ? `<input class="p-loc-edit" value="${esc(val.loc||'')}" style="display:none;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text)">`:``}
+          </div>
         </div>
-        <button class="btn btn-blue go" data-key="${key}">${LANG==='it'?'Navigatore':LANG==='en'?'Navigator':'Навігатор'}</button>
-        ${window.isAdmin?`<button class="btn btn-red del" data-key="${key}">✖</button>`:''}
+        <button class="btn btn-blue go" data-key="${key}">${window.LANG==='it'?'Navigatore':window.LANG==='en'?'Navigator':'Навігатор'}</button>
+        ${window.isAdmin?`
+          <button class="btn small" data-edit="${key}">✏️ Редагувати</button>
+          <button class="btn btn-green small" data-save="${key}" style="display:none">💾 Зберегти</button>
+          <button class="btn btn-red small del" data-key="${key}">✖</button>
+        `:''}
       `;
       pList.appendChild(row);
     });
+
+  // навігація
   pList.querySelectorAll('.go').forEach(btn=>{
     btn.onclick = ()=> { const k=btn.dataset.key; const val=obj[k]; openPlace(val.loc); };
   });
+
   if(window.isAdmin){
+    // видалення
     pList.querySelectorAll('.del').forEach(btn=>{
       btn.onclick = async ()=>{ 
-        if(confirm(LANG==='it'?'Eliminare?':LANG==='en'?'Delete?':'Видалити місце?')) 
+        if(confirm(window.LANG==='it'?'Eliminare?':window.LANG==='en'?'Delete?':'Видалити місце?')) 
           await remove(child(placesRef,btn.dataset.key)); 
+      };
+    });
+    // редагування
+    pList.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const k = btn.dataset.edit;
+        const card = btn.closest('.item');
+        card.querySelector('.p-name').style.display='none';
+        card.querySelector('.p-loc').style.display='none';
+        card.querySelector('.p-name-edit').style.display='';
+        card.querySelector('.p-loc-edit').style.display='';
+        btn.style.display='none';
+        card.querySelector(`[data-save="${k}"]`).style.display='';
+      };
+    });
+    pList.querySelectorAll('[data-save]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const k = btn.dataset.save;
+        const card = btn.closest('.item');
+        const name = card.querySelector('.p-name-edit').value.trim();
+        const loc  = card.querySelector('.p-loc-edit').value.trim();
+        await update(child(placesRef,k), { name, loc });
       };
     });
   }
@@ -599,14 +688,94 @@ window.addEventListener('admin-changed', ()=>renderPlaces(lastPlacesData));
 
 pAdd.onclick = async ()=>{
   const name=(pName.value||'').trim(), loc=(pLoc.value||'').trim();
-  if(!name || !loc){ alert(LANG==='it'?'Compila nome e indirizzo/coordinate':LANG==='en'?'Fill name and address/coordinates':'Заповни назву і адресу/координати'); return; }
+  if(!name || !loc){ alert(window.LANG==='it'?'Compila nome e indirizzo/coordinate':window.LANG==='en'?'Fill name and address/coordinates':'Заповни назву і адресу/координати'); return; }
   await push(placesRef, { name, loc, createdBy: USER, createdAt: Date.now() });
   pName.value=''; pLoc.value='';
   document.getElementById('placesSaved').style.display='block';
 };
 pUseMe.onclick = ()=> navigator.geolocation.getCurrentPosition(p=>{
   pLoc.value = `${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`;
-},()=>alert(LANG==='it'?'GPS non disponibile':LANG==='en'?'GPS unavailable':'GPS недоступний'),{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+},()=>alert(window.LANG==='it'?'GPS non disponibile':window.LANG==='en'?'GPS unavailable':'GPS недоступний'),{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+
+/* -------------------- Admin visitors panel -------------------- */
+const adminPanel   = document.getElementById('adminPanel');
+const vList        = document.getElementById('v-list');
+const vUTodayEl    = document.getElementById('v-unique-today');
+const vUAllEl      = document.getElementById('v-unique-all');
+const vUpdEl       = document.getElementById('v-last-update');
+const vRefreshBtn  = document.getElementById('v-refresh');
+const vClearToday  = document.getElementById('v-clear-today');
+const vClearAll    = document.getElementById('v-clear-all');
+
+function dayKey(){ return new Date().toISOString().slice(0,10); }
+
+async function loadVisitors(){
+  try{
+    const day = dayKey();
+    const [todaySnap, allSnap] = await Promise.all([
+      get(ref(db, `visits_by_day/${day}`)),
+      get(ref(db, 'visitors'))
+    ]);
+    const todayObj = todaySnap.val() || {};
+    const allObj   = allSnap.val() || {};
+
+    const todayIds = Object.keys(todayObj);
+    const arr = Object.values(allObj).sort((a,b)=>(b.lastSeen||0)-(a.lastSeen||0));
+
+    vUTodayEl.textContent = todayIds.length;
+    vUAllEl.textContent   = Object.keys(allObj).length;
+    vUpdEl.textContent    = new Date().toLocaleTimeString();
+
+    vList.innerHTML = arr.map(v=>{
+      const isToday = todayIds.includes(v.id) ? '🟢' : '⚪';
+      const last = v.lastSeen ? new Date(v.lastSeen).toLocaleString() : '—';
+      return `
+        <div class="item" style="justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-weight:900">${esc(v.name||'Anon')}</div>
+            <div class="chat-meta">${esc(v.id)}</div>
+            <div class="chat-meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(v.ua||'')}</div>
+          </div>
+          <div style="text-align:right">
+            <div>${isToday}</div>
+            <div class="chat-meta">${last}</div>
+            ${window.isAdmin ? `<button class="btn btn-red small" data-del="${esc(v.id)}">✖</button>`:''}
+          </div>
+        </div>`;
+    }).join('');
+
+    if(window.isAdmin){
+      vList.querySelectorAll('[data-del]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const id = btn.getAttribute('data-del');
+          if(!confirm('Видалити відвідувача?')) return;
+          await remove(ref(db, `visitors/${id}`));
+          loadVisitors();
+        };
+      });
+    }
+  }catch(e){ console.warn('loadVisitors error', e); }
+}
+
+vRefreshBtn.onclick = loadVisitors;
+vClearToday.onclick = async ()=>{
+  if(!window.isAdmin) return; 
+  if(!confirm('Очистити “сьогоднішні” унікальні відвідини?')) return;
+  await remove(ref(db, `visits_by_day/${dayKey()}`));
+  loadVisitors();
+};
+vClearAll.onclick = async ()=>{
+  if(!window.isAdmin) return;
+  if(!confirm('Очистити ВСІХ відвідувачів (visitors)?')) return;
+  await remove(ref(db, 'visitors'));
+  loadVisitors();
+};
+
+// показувати панель тільки для адміна
+window.addEventListener('admin-changed', ()=>{
+  if(window.isAdmin){ adminPanel.style.display='block'; loadVisitors(); }
+  else { adminPanel.style.display='none'; }
+});
 </script>
 
 <!-- === WEATHER FIX + LOADER === -->
@@ -646,7 +815,7 @@ window.lastWeather = {city:'—', temp:'—', wind:'—'};
 </script>
 <!-- === END WEATHER FIX + LOADER === -->
 
-<!-- Пасхалка -->
+<!-- Пасхалка + SW -->
 <script>
 let clickCount = 0, clickTimer;
 const logo = document.querySelector('.flag');
@@ -668,13 +837,15 @@ logo.addEventListener('click', () => {
 const style = document.createElement('style');
 style.textContent='@keyframes fadeOutLegend{0%{opacity:0;transform:scale(.7) rotate(-5deg)}10%{opacity:1;transform:scale(1.05) rotate(2deg)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.2) rotate(5deg)}}';
 document.head.appendChild(style);
-</script>
-<script>
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js')
     .then(() => console.log('Service Worker зареєстрований'))
     .catch(err => console.log('SW помилка:', err));
 }
+
+/* Splash close on Enter key */
+document.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && document.getElementById('splash')) document.getElementById('enterBtn').click(); });
 </script>
 
 </body>

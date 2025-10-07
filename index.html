@@ -283,6 +283,25 @@ function openPlace(q){
 }
 </script>
 
+  if(/Android/i.test(navigator.userAgent)) window.location.href=url; else window.open(url,'_blank');
+}
+</script>
+
+<!-- === Site Visits Counter === -->
+<script>
+(function(){
+  const siteKey='programmapro-site';
+  // +1 до загального та до "сьогодні" при кожному відкритті сторінки
+  fetch(`https://api.countapi.xyz/hit/${siteKey}/total`).catch(()=>{});
+  const today=new Date().toISOString().slice(0,10);
+  fetch(`https://api.countapi.xyz/hit/${siteKey}/${today}`).catch(()=>{});
+})();
+</script>
+
+<!-- ===== Route module (ізоляція, без конфліктів) ===== -->
+<script>
+(function(){
+
 <!-- ===== Route module (ізоляція, без конфліктів) ===== -->
 <script>
 (function(){
